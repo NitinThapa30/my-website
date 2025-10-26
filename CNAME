@@ -1,1 +1,38 @@
 nitinthapaportfoilo.home.kg
+Type: CNAME
+Name: @ or www (depending on whether you want root or subdomain)
+Target/Value: yourusername.github.io
+TTL: 3600 or Automatic
+```
+
+**Example:**
+- If your GitHub username is `johndoe` and repository is `my-site`
+- Target would be: `johndoe.github.io`
+
+### 4. Alternative: Add A Records (For Root Domain)
+
+If you're using the root domain (without www), you might need A records instead:
+
+1. Click **Add Record** (do this 4 times for each IP)
+2. For each record:
+```
+Type: A
+Name: @ (or leave blank)
+Value: 
+  - 185.199.108.153
+  - 185.199.109.153
+  - 185.199.110.153
+  - 185.199.111.153
+TTL: 3600
+```
+
+### 5. Save Changes
+
+- Click **Save** or **Update**
+- DNS changes can take 15 minutes to 48 hours to propagate
+
+## Common DNS Panel Layouts
+
+Most domain providers have similar interfaces:
+```
+[Domain Name] → [Manage] → [DNS/Name Servers] → [Add Record]
