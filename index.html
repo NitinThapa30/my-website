@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="my_image_Nitinthapa.jpg">
+    <link rel="image" href="my_image.jpg" type="image/jpg">
+    <title>Nitin Thapa - Game Developer Portfolio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tally, sans-serif;
+            background: linear-gradient(135deg, #000022, #000);
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-bottom: 0;
+        }
+
+        .header-content {
+            width: 100%;
+            text-align: left;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        h1 {
+            font-size: 5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #00f5ff, #ff00ea);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glow 3s ease-in-out infinite;
+            transform-style: preserve-3d;
+            position: relative;
+            text-align: left;
+            letter-spacing: 4px;
+            margin-left: 2rem;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        .subtitle {
+            font-size: 1.8rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 3rem;
+            text-align: left;
+            letter-spacing: 2px;
+            margin-left: 2rem;
+        }
+
+        .cta-button {
+            padding: 1rem 2.5rem;
+            font-size: 1.2rem;
+            background: linear-gradient(90deg, #00f5ff, #ff00ea);
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            font-weight: 600;
+            margin-left: 2rem;
+            align-self: flex-start;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 245, 255, 0.5);
+        }
+
+        section {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-align: center;
+            background: linear-gradient(45deg, #00f5ff, #ff00ea);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .profile-image {
+            width: 320px;
+            height: auto;
+            margin-bottom: 2rem;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: all 0.5s ease;
+            margin-left: 2rem;
+        }
+
+        .profile-image:hover {
+            transform: translateZ(20px) rotateY(3deg);
+        }
+
+        .profile-image::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #00f5ff, #ff00ea);
+            transform: translateZ(-20px);
+            filter: blur(15px);
+            opacity: 0.15;
+        }
+
+        .profile-image img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            position: relative;
+            z-index: 1;
+            filter: contrast(1.1) drop-shadow(0 0 25px rgba(0, 245, 255, 0.2));
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 245, 255, 0.3);
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .skill-category h3 {
+            color: #00f5ff;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .skill-item {
+            background: rgba(0, 245, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            margin: 0.5rem 0;
+            border-left: 3px solid #00f5ff;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px) rotateX(5deg);
+        }
+        
+        .project-card:hover::before {
+            left: 100%;
+        }
+
+        .project-card h3 {
+            color: #ff00ea;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .project-card li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .project-card li::before {
+            content: '▹';
+            position: absolute;
+            left: 0;
+            color: #00f5ff;
+            font-size: 1.2rem;
+        }
+
+        .education-item, .experience-item {
+            margin-bottom: 2rem;
+        }
+
+        .education-item h3, .experience-item h3 {
+            color: #ffaa00;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .date {
+            color: #00f5ff;
+            font-style: italic;
+            margin-bottom: 0.5rem;
+        }
+
+        .location {
+            color: #aaa;
+            margin-bottom: 1rem;
+        }
+
+        .contact-info {
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .contact-info a {
+            color: #00f5ff;
+            text-decoration: none;
+            margin: 0 1rem;
+            transition: color 0.3s;
+        }
+
+        .contact-info a:hover {
+            color: #ff00ea;
+        }
+
+        .certificates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .cert-item {
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.1), rgba(255, 0, 234, 0.1));
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .cert-item:hover {
+            transform: scale(1.05);
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #00f5ff;
+        }
+
+        .floating-shape {
+            position: fixed;
+            will-change: transform;
+            transition: opacity 0.5s;
+            filter: blur(1.5px);
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .subtitle {
+                font-size: 1.2rem;
+            }
+
+            nav {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @keyframes floatShape {
+          0% { transform: translateY(0) scale(1) rotate(0deg); }
+          100% { transform: translateY(-60px) scale(1.08) rotate(20deg); }
+        }
+
+        .gallery-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 2rem;
+          margin: 2rem 0;
+        }
+        .gallery-item {
+          background: rgba(0,0,0,0.25);
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 4px 24px rgba(0,245,255,0.08);
+          position: relative;
+          transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .gallery-item:hover {
+          transform: scale(1.04) rotateZ(-2deg);
+          box-shadow: 0 8px 32px rgba(0,245,255,0.18);
+          z-index: 2;
+        }
+        .gallery-item img {
+          width: 100%;
+          display: block;
+        }
+        .gallery-caption {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          background: linear-gradient(90deg, #00f5ff, #ff00ea);
+          color: #fff;
+          font-weight: 600;
+          font-size: 1.1rem;
+          padding: 0.5rem 1rem;
+          opacity: 0.85;
+        }
+        .skill-bars {
+          margin: 2rem 0;
+          max-width: 600px;
+        }
+        .skill-bar {
+          margin-bottom: 1.5rem;
+        }
+        .skill-bar span {
+          display: inline-block;
+          width: 160px;
+          font-weight: 600;
+          color: #00f5ff;
+        }
+        .skill-bar .bar {
+          display: inline-block;
+          width: 60%;
+          height: 18px;
+          background: rgba(255,255,255,0.08);
+          border-radius: 10px;
+          margin-left: 1rem;
+          vertical-align: middle;
+          overflow: hidden;
+        }
+        .skill-bar .fill {
+          height: 100%;
+          background: linear-gradient(90deg, #00f5ff, #ff00ea);
+          border-radius: 10px;
+          animation: fillBar 2s cubic-bezier(.77,0,.18,1) 1;
+        }
+        @keyframes fillBar {
+          from { width: 0; }
+          to { width: 100%; }
+        }
+        .timeline {
+          position: relative;
+          margin: 3rem auto;
+          max-width: 700px;
+        }
+        .timeline:before {
+          content: '';
+          position: absolute;
+          left: 50%;
+          top: 0;
+          width: 4px;
+          height: 100%;
+          background: linear-gradient(180deg, #00f5ff, #ff00ea);
+          transform: translateX(-50%);
+          border-radius: 2px;
+          opacity: 0.3;
+        }
+        .timeline-item {
+          display: flex;
+          align-items: center;
+          margin-bottom: 2.5rem;
+          position: relative;
+        }
+        .timeline-item.left { justify-content: flex-start; }
+        .timeline-item.right { justify-content: flex-end; }
+        .timeline-dot {
+          width: 18px;
+          height: 18px;
+          background: linear-gradient(135deg, #00f5ff, #ff00ea);
+          border-radius: 50%;
+          margin: 0 1.5rem;
+          box-shadow: 0 0 12px #00f5ff44;
+        }
+        .timeline-content {
+          background: rgba(0,0,0,0.18);
+          border-radius: 12px;
+          padding: 1.2rem 2rem;
+          color: #fff;
+          min-width: 220px;
+          max-width: 320px;
+          box-shadow: 0 2px 12px #00f5ff22;
+          font-size: 1.1rem;
+        }
+        .cta-glow {
+          display: inline-block;
+          margin-top: 2rem;
+          padding: 1.2rem 3rem;
+          font-size: 1.3rem;
+          font-weight: 700;
+          color: #fff;
+          background: linear-gradient(90deg, #00f5ff, #ff00ea, #ffaa00);
+          border-radius: 50px;
+          box-shadow: 0 0 32px #00f5ff44, 0 0 64px #ff00ea22;
+          text-decoration: none;
+          letter-spacing: 2px;
+          transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+          animation: ctaPulse 2.5s infinite alternate;
+        }
+        .cta-glow:hover {
+          background: linear-gradient(90deg, #ffaa00, #ff00ea, #00f5ff);
+          box-shadow: 0 0 64px #ffaa0044, 0 0 32px #00f5ff22;
+          transform: scale(1.04);
+        }
+        @keyframes ctaPulse {
+          0% { box-shadow: 0 0 32px #00f5ff44, 0 0 64px #ff00ea22; }
+          100% { box-shadow: 0 0 64px #ffaa0044, 0 0 32px #00f5ff22; }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <nav>
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#skills">Skills</a>
+        <a href="#projects">Projects</a>
+        <a href="#education">Education</a>
+        <a href="#contact">Contact</a>
+    </nav>
+
+    <div class="content">
+        <header id="home">
+            <div class="header-content">
+                <div class="profile-image">
+                    <img src="my_image.jpg" alt="Nitin Thapa">
+                </div>
+                <h1>NITIN THAPA</h1>
+                <p class="subtitle">Game Developer | AI Engineer | Full-Stack Developer</p>
+                <button class="cta-button" onclick="document.getElementById('footer-links').scrollIntoView({behavior: 'smooth'})">
+                    Get In Touch
+                </button>
+            </div>
+        </header>
+
+        <section id="about">
+            <h2 class="section-title">About Me</h2>
+            <div class="card">
+                <p style="font-size: 1.2rem; line-height: 1.8;">
+                    Determined BCA student with a focus on Game Development, Artificial Intelligence, and Full-Stack Development. 
+                    Passionate about developing AI-driven applications, 3D/Unreal Engine ventures, and cross-platform software solutions. 
+                    Currently seeking internship opportunities to implement technical skills, work on real-world projects, and gain 
+                    valuable industry experience.
+                </p>
+            </div>
+        </section>
+
+        <section id="skills">
+            <h2 class="section-title">Technical Arsenal</h2>
+            <div class="skills-grid">
+                <div class="skill-category card">
+                    <h3>Programming Languages</h3>
+                    <div class="skill-item">Python</div>
+                    <div class="skill-item">C++</div>
+                    <div class="skill-item">C#</div>
+                    <div class="skill-item">Java</div>
+                    <div class="skill-item">SQL</div>
+                </div>
+
+                <div class="skill-category card">
+                    <h3>Game Development</h3>
+                    <div class="skill-item">Unreal Engine 5</div>
+                    <div class="skill-item">Game Designing</div>
+                    <div class="skill-item">Game Testing</div>
+                    <div class="skill-item">Blender Basics</div>
+                    <div class="skill-item">3D Object Recognition</div>
+                </div>
+
+                <div class="skill-category card">
+                    <h3>AI & Machine Learning</h3>
+                    <div class="skill-item">NLP</div>
+                    <div class="skill-item">LLMs (Mistral-7B)</div>
+                    <div class="skill-item">Stable Diffusion</div>
+                    <div class="skill-item">PyTorch</div>
+                    <div class="skill-item">OCR & Object Detection</div>
+                </div>
+
+                <div class="skill-category card">
+                    <h3>Web & Tools</h3>
+                    <div class="skill-item">HTML/CSS/JavaScript</div>
+                    <div class="skill-item">PySide6/Qt</div>
+                    <div class="skill-item">Docker</div>
+                    <div class="skill-item">Git</div>
+                    <div class="skill-item">MySQL/SQLite</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="projects">
+            <h2 class="section-title">Featured Projects</h2>
+            
+            <div class="project-card">
+                <h3>Bhaskara-AI (Offline Multimodal AI Assistant)</h3>
+                <ul>
+                    <li>Designed and developed an offline AI assistant with multimodal capabilities (text, voice, and image)</li>
+                    <li>Integrated Mistral-7B LLM via llama-cpp-python for natural language understanding and Stable Diffusion for image generation</li>
+                    <li>Built a PySide6 + HTML/CSS GUI supporting text-to-text, text-to-voice, voice-to-voice, OCR, and object detection</li>
+                    <li>Implemented chat history management, news & weather APIs, and real-time voice interaction</li>
+                    <li>Optimized for offline use ensuring lightweight performance without external API dependencies</li>
+                </ul>
+            </div>
+
+            <div class="project-card">
+                <h3>Multimodel Language Translator</h3>
+                <ul>
+                    <li>Built a desktop-based translation tool capable of handling text, speech, and image inputs</li>
+                    <li>Integrated OCR (Tesseract) for image-to-text, Speech Recognition for voice input, and Pyttsx3 TTS for translated voice output</li>
+                    <li>Designed an intuitive GUI using PySide6 for smooth user interaction</li>
+                    <li>Ensured real-time translation workflow with support for multiple languages</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="education">
+            <h2 class="section-title">Education & Experience</h2>
+            
+            <div class="card">
+                <div class="education-item">
+                    <h3>Bachelor of Computer Applications (BCA)</h3>
+                    <p class="date">10/2025</p>
+                    <p class="location">Amity University, Dehradun, India</p>
+                    <p>Gained strong fundamentals in computer science, programming, and software development. Developed hands-on skills in C, C++, Java, Python, and DBMS. Built a solid foundation in AI, Game Development, and Full-Stack Development.</p>
+                </div>
+
+                <div class="education-item">
+                    <h3>Diploma in Computer Science and Engineering</h3>
+                    <p class="date">04/2022 – 07/2025</p>
+                    <p class="location">GRD Institute of Management & Technology, Dehradun, India</p>
+                    <p>Worked on academic and personal projects including AI applications, software tools, and game prototypes.</p>
+                </div>
+
+                <div class="education-item">
+                    <h3>Advanced Diploma in Computer Application</h3>
+                    <p class="date">04/2022 – 07/2023</p>
+                    <p class="location">Dot Net Computer Education, Dehradun, India</p>
+                    <p>Gained proficiency in MS Office Suite, HTML, Tally ERP, and Graphic Design Tools (CorelDRAW, Photoshop, InDesign).</p>
+                </div>
+            </div>
+
+            <h2 class="section-title" style="margin-top: 4rem;">Professional Experience</h2>
+            
+            <div class="card">
+                <div class="experience-item">
+                    <h3>C++ Programmer Intern</h3>
+                    <p class="date">08/2024 – 09/2024</p>
+                    <p class="location">CodSoft, Dehradun</p>
+                    <p>Completed a 4-week virtual internship gaining hands-on experience in software development and strengthening core programming, problem-solving, and project implementation skills.</p>
+                </div>
+
+                <div class="experience-item">
+                    <h3>Graphic Designer Intern</h3>
+                    <p class="date">06/2024 – 07/2024</p>
+                    <p class="location">Slog Solutions Pvt. Ltd, Dehradun</p>
+                    <p>Completed 4-week training gaining practical experience in Adobe Photoshop and Adobe Premiere Pro for professional graphic design and video editing.</p>
+                </div>
+            </div>
+
+            <h2 class="section-title" style="margin-top: 4rem;">Certifications</h2>
+            <div class="certificates-grid">
+                <div class="cert-item">Introduction to Generative AI</div>
+                <div class="cert-item">Introduction to Responsible AI</div>
+                <div class="cert-item">Prompt Design in Vertex AI</div>
+                <div class="cert-item">Certificate Of Training in Graphic Designing</div>
+                <div class="cert-item">Introduction to Large Language Models</div>
+                <div class="cert-item">Responsible AI: Applying AI Principles with Google Cloud</div>
+                <div class="cert-item">Introduction to Neural Networks and Deep Learning</div>
+            </div>
+        </section>
+
+        <section id="contact">
+            <h2 class="section-title">Let's Connect</h2>
+            <div class="card contact-info">
+                <p style="margin-bottom: 1rem;">📧 <a href="mailto:nitinomegax@gmail.com">nitinomegax@gmail.com</a></p>
+                <p style="margin-bottom: 1rem;">📱 <a href="tel:8077499874">8077499874</a></p>
+                <p>📍 105/2, Jakhan, Rajpur Road, Dehradun, Uttarakhand - 248001</p>
+            </div>
+        </section>
+
+        <!-- Interactive 3D Game Section (replaces Featured 3D Model) -->
+        <section id="webgame" style="margin-top:6rem;">
+          <h2 class="section-title">Play My 3D GEM GAME</h2>
+          <div id="game-container" style="width:100%;max-width:600px;height:400px;margin:2rem auto 0 auto;background:rgba(0,0,0,0.3);border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.3);position:relative;overflow:hidden;">
+            <iframe src="webgame.html" style="width:100%;height:100%;border:none;border-radius:18px;overflow:hidden;background:#18182a;" title="3D Web Game"></iframe>
+          </div>
+        </section>
+
+        <script>
+        // --- Lightweight 3D Web Game (Three.js platformer demo) ---
+        (function(){
+          const canvas = document.getElementById('webgame-canvas');
+          if(!canvas) return;
+          const scene = new THREE.Scene();
+          scene.background = null;
+          const camera = new THREE.PerspectiveCamera(60, canvas.clientWidth/canvas.clientHeight, 0.1, 1000);
+          const renderer = new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
+          renderer.setClearColor(0x000000,0);
+          renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+          // Platform
+          const platformGeo = new THREE.BoxGeometry(8,0.5,8);
+          const platformMat = new THREE.MeshStandardMaterial({color:0x222244,metalness:0.3,roughness:0.7});
+          const platform = new THREE.Mesh(platformGeo, platformMat);
+          platform.position.y = -1.5;
+          scene.add(platform);
+          // Player
+          const playerGeo = new THREE.BoxGeometry(0.7,1.2,0.7);
+          const playerMat = new THREE.MeshStandardMaterial({color:0x00f5ff,metalness:0.7,roughness:0.3});
+          const player = new THREE.Mesh(playerGeo, playerMat);
+          player.position.y = 0.1;
+          scene.add(player);
+          // Obstacles
+          const obsGeo = new THREE.BoxGeometry(0.7,0.7,0.7);
+          const obsMat = new THREE.MeshStandardMaterial({color:0xff00ea,metalness:0.5,roughness:0.5});
+          const obstacles = [];
+          for(let i=0;i<5;i++){
+            const obs = new THREE.Mesh(obsGeo, obsMat);
+            obs.position.set(-2+Math.random()*4, -1+0.35, -2+Math.random()*4);
+            scene.add(obs);
+            obstacles.push(obs);
+          }
+          // Lighting
+          const light = new THREE.PointLight(0xffffff,1,100);light.position.set(10,10,10);scene.add(light);
+          camera.position.set(0,2.5,7);
+          camera.lookAt(0,0,0);
+          // Controls
+          let velY=0, onGround=true, keys={};
+          window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;});
+          window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+          // Game loop
+          function animateGame(){
+            requestAnimationFrame(animateGame);
+            // Movement
+            let moveX=0,moveZ=0,speed=0.09;
+            if(keys['arrowup']||keys['w']) moveZ=-speed;
+            if(keys['arrowdown']||keys['s']) moveZ=speed;
+            if(keys['arrowleft']||keys['a']) moveX=-speed;
+            if(keys['arrowright']||keys['d']) moveX=speed;
+            player.position.x+=moveX;
+            player.position.z+=moveZ;
+            // Boundaries
+            player.position.x=Math.max(-3.5,Math.min(3.5,player.position.x));
+            player.position.z=Math.max(-3.5,Math.min(3.5,player.position.z));
+            // Gravity & Jump
+            if(onGround&&(keys[' ']||keys['space'])){velY=0.16;onGround=false;}
+            velY-=0.008;
+            player.position.y+=velY;
+            if(player.position.y<=0.1){player.position.y=0.1;velY=0;onGround=true;}
+            // Simple collision with obstacles
+            obstacles.forEach(obs=>{
+              if(Math.abs(player.position.x-obs.position.x)<0.7&&Math.abs(player.position.z-obs.position.z)<0.7&&player.position.y<0.8){
+                obs.material.color.set(0x00f5ff);
+              }else{
+                obs.material.color.set(0xff00ea);
+              }
+            });
+            renderer.render(scene,camera);
+          }
+          animateGame();
+        })();
+        </script>
+
+        <!-- Animated Timeline for Experience -->
+        <section id="timeline" style="margin-top:4rem;">
+          <h2 class="section-title">Game Dev Journey</h2>
+          <div class="timeline">
+            <div class="timeline-item right"><div class="timeline-dot"></div><div class="timeline-content"><h3>2025</h3><p>Graduated from 3 year Diploma in Computer Science and Engineering at GRD Institute of Management & Technology, Dehradun. Currently pursuing BCA at Amity University</p></div></div>
+            <div class="timeline-item right"><div class="timeline-dot"></div><div class="timeline-content"><h3>2024</h3><p>Developed major project <b>Bhaskara-AI</b> (Offline Multimodal AI Assistant) and minor project <b>Multimodel-Language-Translator-with-GUI</b>. Interned as a C++ Programmer at CodSoft and as a Graphic Designer at Slog Solutions Pvt. Ltd.</p></div></div>
+            <div class="timeline-item right"><div class="timeline-dot"></div><div class="timeline-content"><h3>2023</h3><p>Earned an Advanced Diploma in Computer Application. Created procedural materials and textures for indie game projects. Developed skills in MS Office Suite, HTML, and graphic design tools.</p></div></div>
+            <div class="timeline-item right"><div class="timeline-dot"></div><div class="timeline-content"><h3>2022</h3><p>Started journey in game design, 3D modeling, and game testing. Began Diploma in Computer Science and Engineering at GRD Institute of Management & Technology, Dehradun.</p></div></div>
+          </div>
+        </section>
+
+        <!-- Contact Callout with Animated Button -->
+        <section id="cta-contact" style="margin-top:4rem;text-align:center;">
+          <h2 class="section-title">Ready to Collaborate?</h2>
+          <a href="#contact" class="cta-glow">Let's Build Games Together!</a>
+        </section>
+
+        <!-- Portfolio Footer -->
+        <footer id="footer-links" style="margin-top:6rem;text-align:center;color:#aaa;font-size:1.1rem;padding-bottom:2rem;">
+          <div>© 2025 Nitin Thapa | Game Developer Portfolio</div>
+          <div style="margin-top:0.5rem;">
+            <a href="https://www.linkedin.com/in/nitin-thapa-22752a2a1/" style="color:#00f5ff;margin:0 1rem;" target="_blank" rel="noopener"><i class="fab fa-linkedin"></i> LinkedIn</a>
+            <a href="https://github.com/NitinThapa30" style="color:#ffaa00;margin:0 1rem;" target="_blank" rel="noopener"><i class="fab fa-github"></i> GitHub</a> 
+            <a href="#" id="resume-link" style="color:#fff;margin:0 1rem;">Resume</a>
+          </div>
+        </footer>
+
+        <!-- Resume Modal Overlay -->
+        <div id="resume-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(10,10,30,0.92);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:opacity 0.4s;">
+          <div style="position:relative;width:90vw;max-width:900px;height:90vh;box-shadow:0 8px 40px #00f5ff44;border-radius:18px;overflow:hidden;background:#111;animation:modalPop 0.5s cubic-bezier(.77,0,.18,1);">
+            <button id="close-resume" style="position:absolute;top:16px;right:24px;background:rgba(0,0,0,0.7);color:#fff;border:none;font-size:2rem;z-index:2;cursor:pointer;border-radius:50%;width:40px;height:40px;">&times;</button>
+            <iframe src="NitinThapa_Resume.pdf" style="width:100%;height:100%;border:none;" title="Resume PDF"></iframe>
+          </div>
+        </div>
+
+        <style>
+        @keyframes modalPop {
+          0% { transform: scale(0.8) translateY(60px); opacity: 0; }
+          100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        #resume-modal[style*="display: flex"] { opacity: 1; pointer-events: auto; }
+        #resume-modal { opacity: 0; pointer-events: none; }
+        </style>
+        <script>
+        document.getElementById('resume-link').onclick = function(e) {
+          e.preventDefault();
+          var modal = document.getElementById('resume-modal');
+          modal.style.display = 'flex';
+          setTimeout(function(){ modal.style.opacity = 1; }, 10);
+        };
+        document.getElementById('close-resume').onclick = function() {
+          var modal = document.getElementById('resume-modal');
+          modal.style.opacity = 0;
+          setTimeout(function(){ modal.style.display = 'none'; }, 400);
+        };
+        window.addEventListener('keydown', function(e) {
+          if(e.key === 'Escape') {
+            var modal = document.getElementById('resume-modal');
+            modal.style.opacity = 0;
+            setTimeout(function(){ modal.style.display = 'none'; }, 400);
+          }
+        });
+        </script>
+        <!-- Portfolio Effects & 3D Model Viewer Script -->
+        <style>
+        .gallery-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 2rem;
+          margin: 2rem 0;
+        }
+        .gallery-item {
+          background: rgba(0,0,0,0.25);
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 4px 24px rgba(0,245,255,0.08);
+          position: relative;
+          transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .gallery-item:hover {
+          transform: scale(1.04) rotateZ(-2deg);
+          box-shadow: 0 8px 32px rgba(0,245,255,0.18);
+          z-index: 2;
+        }
+        .gallery-item img {
+          width: 100%;
+          display: block;
+        }
+        .gallery-caption {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          background: linear-gradient(90deg, #00f5ff, #ff00ea);
+          color: #fff;
+          font-weight: 600;
+          font-size: 1.1rem;
+          padding: 0.5rem 1rem;
+          opacity: 0.85;
+        }
+        .skill-bars {
+          margin: 2rem 0;
+          max-width: 600px;
+        }
+        .skill-bar {
+          margin-bottom: 1.5rem;
+        }
+        .skill-bar span {
+          display: inline-block;
+          width: 160px;
+          font-weight: 600;
+          color: #00f5ff;
+        }
+        .skill-bar .bar {
+          display: inline-block;
+          width: 60%;
+          height: 18px;
+          background: rgba(255,255,255,0.08);
+          border-radius: 10px;
+          margin-left: 1rem;
+          vertical-align: middle;
+          overflow: hidden;
+        }
+        .skill-bar .fill {
+          height: 100%;
+          background: linear-gradient(90deg, #00f5ff, #ff00ea);
+          border-radius: 10px;
+          animation: fillBar 2s cubic-bezier(.77,0,.18,1) 1;
+        }
+        @keyframes fillBar {
+          from { width: 0; }
+          to { width: 100%; }
+        }
+        .timeline {
+          position: relative;
+          margin: 3rem auto;
+          max-width: 700px;
+        }
+        .timeline:before {
+          content: '';
+          position: absolute;
+          left: 50%;
+          top: 0;
+          width: 4px;
+          height: 100%;
+          background: linear-gradient(180deg, #00f5ff, #ff00ea);
+          transform: translateX(-50%);
+          border-radius: 2px;
+          opacity: 0.3;
+        }
+        .timeline-item {
+          display: flex;
+          align-items: center;
+          margin-bottom: 2.5rem;
+          position: relative;
+        }
+        .timeline-item.left { justify-content: flex-start; }
+        .timeline-item.right { justify-content: flex-end; }
+        .timeline-dot {
+          width: 18px;
+          height: 18px;
+          background: linear-gradient(135deg, #00f5ff, #ff00ea);
+          border-radius: 50%;
+          margin: 0 1.5rem;
+          box-shadow: 0 0 12px #00f5ff44;
+        }
+        .timeline-content {
+          background: rgba(0,0,0,0.18);
+          border-radius: 12px;
+          padding: 1.2rem 2rem;
+          color: #fff;
+          min-width: 220px;
+          max-width: 320px;
+          box-shadow: 0 2px 12px #00f5ff22;
+          font-size: 1.1rem;
+        }
+        .cta-glow {
+          display: inline-block;
+          margin-top: 2rem;
+          padding: 1.2rem 3rem;
+          font-size: 1.3rem;
+          font-weight: 700;
+          color: #fff;
+          background: linear-gradient(90deg, #00f5ff, #ff00ea, #ffaa00);
+          border-radius: 50px;
+          box-shadow: 0 0 32px #00f5ff44, 0 0 64px #ff00ea22;
+          text-decoration: none;
+          letter-spacing: 2px;
+          transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+          animation: ctaPulse 2.5s infinite alternate;
+        }
+        .cta-glow:hover {
+          background: linear-gradient(90deg, #ffaa00, #ff00ea, #00f5ff);
+          box-shadow: 0 0 64px #ffaa0044, 0 0 32px #00f5ff22;
+          transform: scale(1.04);
+        }
+        @keyframes ctaPulse {
+          0% { box-shadow: 0 0 32px #00f5ff44, 0 0 64px #ff00ea22; }
+          100% { box-shadow: 0 0 64px #ffaa0044, 0 0 32px #00f5ff22; }
+        }
+        </style>
+    </div>
+
+    <script>
+        // Three.js Scene Setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Create particle system
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 6000;
+        const posArray = new Float32Array(particlesCount * 3);
+        const colors = new Float32Array(particlesCount * 3);
+        const sizes = new Float32Array(particlesCount);
+
+        for(let i = 0; i < particlesCount * 3; i += 3) {
+            // Create particles more concentrated on the right side
+            posArray[i] = (Math.random() - 0.7) * 100;  // x position
+            posArray[i + 1] = (Math.random() - 0.5) * 100;  // y position
+            posArray[i + 2] = (Math.random() - 0.5) * 50;   // z position
+
+            // Create gradient colors with more blue/cyan tones
+            const t = Math.random();
+            colors[i] = 0.2 * t; // R
+            colors[i + 1] = 0.5 + (0.5 * t); // G
+            colors[i + 2] = 1; // B
+            
+            // Vary particle sizes
+            sizes[i/3] = Math.random() * 0.3;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+        
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.2,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending,
+            sizeAttenuation: true
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        // Create floating cubes
+        const cubes = [];
+        for(let i = 0; i < 15; i++) {
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshBasicMaterial({
+                color: Math.random() > 0.5 ? 0x00f5ff : 0xff00ea,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.3
+            });
+            const cube = new THREE.Mesh(geometry, material);
+            cube.position.set(
+                (Math.random() - 0.5) * 40,
+                (Math.random() - 0.5) * 40,
+                (Math.random() - 0.5) * 40
+            );
+            cube.rotation.set(
+                Math.random() * Math.PI,
+                Math.random() * Math.PI,
+                Math.random() * Math.PI
+            );
+            cubes.push(cube);
+            scene.add(cube);
+        }
+
+        camera.position.z = 20;
+
+        // Mouse interaction
+        let mouseX = 0;
+        let mouseY = 0;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate particles
+            particlesMesh.rotation.y += 0.0005;
+            particlesMesh.rotation.x += 0.0002;
+            
+            // Make particles follow mouse
+            const positions = particlesMesh.geometry.attributes.position.array;
+            for(let i = 0; i < positions.length; i += 3) {
+                const x = positions[i];
+                const y = positions[i + 1];
+                const z = positions[i + 2];
+                
+                // Add wave effect
+                positions[i + 1] = y + Math.sin((x + Date.now() * 0.001) * 0.1) * 0.1;
+                positions[i] = x + Math.cos((y + Date.now() * 0.001) * 0.1) * 0.1;
+            }
+            particlesMesh.geometry.attributes.position.needsUpdate = true;
+
+            // Animate cubes
+            cubes.forEach((cube, index) => {
+                cube.rotation.x += 0.002;
+                cube.rotation.y += 0.002;
+                cube.position.y += Math.sin(Date.now() * 0.001 + index) * 0.01;
+            });
+
+            // Camera follows mouse
+            camera.position.x += (mouseX * 5 - camera.position.x) * 0.05;
+            camera.position.y += (mouseY * 5 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        // --- Parallax Scroll Effect ---
+        window.addEventListener('scroll', function() {
+            const scrollY = window.scrollY;
+            document.body.style.backgroundPositionY = `${scrollY * 0.3}px`;
+            // Parallax for floating shapes
+            document.querySelectorAll('.floating-shape').forEach((el, i) => {
+                el.style.transform = `translateY(${scrollY * (0.1 + i * 0.03)}px)`;
+            });
+        });
+
+        // --- Floating Shapes ---
+        function createFloatingShape(color, left, top, size, delay) {
+            const shape = document.createElement('div');
+            shape.className = 'floating-shape';
+            shape.style.position = 'fixed';
+            shape.style.left = left;
+            shape.style.top = top;
+            shape.style.width = size;
+            shape.style.height = size;
+            shape.style.background = color;
+            shape.style.opacity = '0.15';
+            shape.style.borderRadius = '50%';
+            shape.style.zIndex = '0';
+            shape.style.pointerEvents = 'none';
+            shape.style.mixBlendMode = 'screen';
+            shape.style.animation = `floatShape 12s ease-in-out ${delay}s infinite alternate`;
+            document.body.appendChild(shape);
+        }
+
+        // Add a few floating shapes
+        createFloatingShape('#00f5ff', '10vw', '20vh', '180px', 0);
+        createFloatingShape('#ff00ea', '70vw', '10vh', '120px', 2);
+        createFloatingShape('#ffaa00', '50vw', '60vh', '140px', 4);
+        createFloatingShape('#00f5ff', '80vw', '80vh', '100px', 1);
+
+        // --- Smooth Scroll for Mouse Wheel ---
+        window.addEventListener('wheel', function(e) {
+            if (window.innerWidth > 900) {
+                e.preventDefault();
+                window.scrollBy({
+                    top: e.deltaY * 0.6,
+                    left: 0,
+                    behavior: 'smooth'
+                });
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>3D Web Game Demo</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #101024; }
+    body { display: flex; align-items: center; justify-content: center; height: 100vh; }
+    #game-canvas { width: 600px; height: 400px; display: block; }
+    #game-ui { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 1.1rem; z-index: 2; pointer-events: none; font-family: 'Press Start 2P', monospace; letter-spacing: 1px; text-shadow: 0 2px 8px #00f5ff, 0 0 2px #fff; }
+    .particle { position: absolute; pointer-events: none; border-radius: 50%; opacity: 0.7; }
+    #start-screen { position: absolute; left: 0; top: 0; width: 100vw; height: 100vh; background: linear-gradient(120deg,#23234a 60%,#00f5ff 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+    #start-screen h1 { color: #fff; font-family: 'Press Start 2P', monospace; font-size: 2.2em; text-shadow: 0 0 16px #00f5ff; }
+    #start-btn { font-family: 'Press Start 2P', monospace; font-size: 1.1em; background: #00f5ff; color: #23234a; border: none; border-radius: 8px; padding: 18px 36px; margin-top: 32px; cursor: pointer; box-shadow: 0 0 16px #00f5ff; transition: background 0.2s; }
+    #start-btn:hover { background: #fff; color: #00f5ff; }
+    #score-float { position: absolute; top: 24px; right: 40px; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 1.2em; text-shadow: 0 0 8px #00f5ff; z-index: 2; }
+  #lives-ui { position: absolute; bottom: 24px; left: 40px; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 1.2em; text-shadow: 0 0 8px #ff0055; z-index: 2; }
+  #timer-ui { position: absolute; top: 60px; right: 40px; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 1.1em; text-shadow: 0 0 8px #00f5ff; z-index: 2; }
+  #pause-btn { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); font-family: 'Press Start 2P', monospace; font-size: 1em; background: #fff; color: #23234a; border: none; border-radius: 8px; padding: 8px 24px; cursor: pointer; box-shadow: 0 0 8px #00f5ff; z-index: 3; }
+    .animated-bg { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; background: radial-gradient(circle at 60% 40%, #00f5ff44 0%, #23234a 80%); animation: bgmove 8s linear infinite alternate; }
+    @keyframes bgmove { 0% { background-position: 60% 40%; } 100% { background-position: 40% 60%; } }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="animated-bg"></div>
+  <div id="start-screen"><h1>3D GEM QUEST</h1><button id="start-btn">START GAME</button></div>
+  <div id="game-ui">WASD/Arrows: Move | Space: Jump | Collect all gems!</div>
+  <div id="score-float">Score: 0</div>
+  <div id="timer-ui">Time: 0</div>
+  <button id="pause-btn">PAUSE</button>
+  <div id="lives-ui">Lives: 3</div>
+  <canvas id="game-canvas" width="600" height="400"></canvas>
+  <audio id="sfx-collect" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b7b6b2.mp3" preload="auto"></audio>
+  <audio id="sfx-jump" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b7b6b2.mp3" preload="auto"></audio>
+  <audio id="sfx-win" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b7b6b2.mp3" preload="auto"></audio>
+  <audio id="bg-music" src="https://cdn.pixabay.com/audio/2023/03/27/audio_12b6b7b6b2.mp3" preload="auto" loop></audio>
+  <audio id="sfx-powerup" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b7b6b2.mp3" preload="auto"></audio>
+  <audio id="sfx-lose" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b7b6b2.mp3" preload="auto"></audio>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+  <script>
+    // 3D Platformer Game Demo with Enhanced Graphics, Sounds, and Start Screen
+    const canvas = document.getElementById('game-canvas');
+    const scene = new THREE.Scene();
+    scene.background = null;
+    const camera = new THREE.PerspectiveCamera(60, 600/400, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+    renderer.setClearColor(0x000000,0);
+    renderer.setSize(600, 400);
+    // Enhanced Lighting
+    const light = new THREE.PointLight(0xffffff, 1.7, 100); light.position.set(10, 10, 10); scene.add(light);
+    const amb = new THREE.AmbientLight(0x404060, 1.2); scene.add(amb);
+    const spot = new THREE.SpotLight(0x00fff7, 0.7, 30, Math.PI/6, 0.5, 1); spot.position.set(0, 8, 0); scene.add(spot);
+    // Platform with texture
+    const platGeo = new THREE.BoxGeometry(10, 0.5, 10);
+    const platMat = new THREE.MeshPhysicalMaterial({color:0x23234a, metalness:0.7, roughness:0.2, clearcoat:0.7, iridescence:0.5});
+    const platform = new THREE.Mesh(platGeo, platMat); platform.position.y = -1.5; scene.add(platform);
+    // Player
+    const playerGeo = new THREE.IcosahedronGeometry(0.5, 1);
+    const playerMat = new THREE.MeshPhysicalMaterial({color:0x00f5ff, metalness:0.9, roughness:0.1, clearcoat:1, iridescence:1, transmission:0.5});
+    const player = new THREE.Mesh(playerGeo, playerMat); player.position.y = 0.1; scene.add(player);
+    // Level data (easier, more gems, fewer obstacles)
+    const LEVELS = [
+      { gems: 4, obstacles: 2, movObs: 1 },
+      { gems: 5, obstacles: 3, movObs: 2 },
+      { gems: 6, obstacles: 3, movObs: 2 },
+      { gems: 7, obstacles: 4, movObs: 3 },
+      { gems: 8, obstacles: 5, movObs: 3 }
+    ];
+    let currentLevel = 0;
+    let gems = [], obstacles = [], movingObstacles = [], powerups = [], score = 0, win = false, totalScore = 0, lives = 3, timer = 0, paused = false, leaderboard = [];
+    let gemMagnet = false, slowMotion = false, skin = 0, shake = 0;
+    const playerSkins = [0x00f5ff, 0xff0055, 0x00ff99, 0xffe100];
+    function playSFX(id) {
+      const el = document.getElementById(id); if(el) { el.currentTime=0; el.play(); }
+    }
+    function playMusic() {
+      const music = document.getElementById('bg-music');
+      if(music && music.paused) { music.volume=0.5; music.play(); }
+    }
+    function stopMusic() {
+      const music = document.getElementById('bg-music');
+      if(music && !music.paused) { music.pause(); music.currentTime=0; }
+    }
+    function particleBurst(x, y) {
+      for(let i=0;i<12;i++){
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.width = p.style.height = (6+Math.random()*8)+'px';
+        p.style.background = `hsl(${Math.random()*360},90%,60%)`;
+        p.style.left = (canvas.offsetLeft+300+x*30+Math.random()*20-10)+'px';
+        p.style.top = (canvas.offsetTop+200-y*30+Math.random()*20-10)+'px';
+        document.body.appendChild(p);
+        setTimeout(()=>{p.style.transform=`translate(${Math.random()*60-30}px,${Math.random()*60-30}px) scale(0.2)`;p.style.opacity=0;},10);
+        setTimeout(()=>{p.remove();},600+Math.random()*200);
+      }
+    }
+    function confettiBurst() {
+      for(let i=0;i<30;i++){
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.background = `hsl(${Math.random()*360},90%,60%)`;
+        c.style.left = (window.innerWidth/2+Math.random()*200-100)+'px';
+        c.style.top = (window.innerHeight/2+Math.random()*100-50)+'px';
+        document.body.appendChild(c);
+        setTimeout(()=>{c.style.transform=`translate(${Math.random()*200-100}px,${Math.random()*200-100}px) scale(0.2)`;c.style.opacity=0;},10);
+        setTimeout(()=>{c.remove();},900+Math.random()*400);
+      }
+    }
+    function showLeaderboard() {
+      const lb = document.getElementById('leaderboard');
+      leaderboard.push({score: totalScore, time: timer});
+      leaderboard.sort((a,b)=>b.score-a.score||a.time-b.time);
+      if(lb) {
+        lb.innerHTML = '<b>LEADERBOARD</b><br>' + leaderboard.slice(0,5).map((e,i)=>`${i+1}. Score: ${e.score} Time: ${e.time}s`).join('<br>');
+        lb.style.display = 'block';
+        setTimeout(()=>{lb.style.display='none';},5000);
+      }
+    }
+    function isFarEnough(pos, arr, minDist) {
+      for(let i=0;i<arr.length;i++){
+        if(Math.hypot(pos.x-arr[i].position.x, pos.z-arr[i].position.z)<minDist) return false;
+      }
+      return true;
+    }
+    function setupLevel(levelIdx) {
+      // Remove old
+      gems.forEach(g=>scene.remove(g));
+      obstacles.forEach(o=>scene.remove(o));
+      movingObstacles.forEach(o=>scene.remove(o));
+      powerups.forEach(p=>scene.remove(p));
+      gems = [];
+      obstacles = [];
+      movingObstacles = [];
+      powerups = [];
+      score = 0;
+      win = false;
+      player.position.set(0,0.1,0);
+      player.material.color.setHex(playerSkins[skin]);
+      // Gems
+      const gemGeo = new THREE.TetrahedronGeometry(0.3);
+      const gemMat = new THREE.MeshPhysicalMaterial({color:0xff00ea, metalness:0.7, roughness:0.1, clearcoat:1, iridescence:1});
+      for(let i=0;i<LEVELS[levelIdx].gems;i++){
+        let tries=0, pos;
+        do {
+          pos = {x:-4+Math.random()*8, z:-4+Math.random()*8};
+          tries++;
+        } while((Math.hypot(pos.x, pos.z)<1.5 || !isFarEnough(pos, gems, 1.2)) && tries<30);
+        const g = new THREE.Mesh(gemGeo, gemMat.clone());
+        g.position.set(pos.x,0.3,pos.z);
+        g.material.color.setHSL(i/LEVELS[levelIdx].gems,0.8,0.6);
+        scene.add(g); gems.push(g);
+      }
+      // Static Obstacles
+      const obsGeo = new THREE.CylinderGeometry(0.3,0.3,1.2,24);
+      const obsMat = new THREE.MeshPhysicalMaterial({color:0xffaa00, metalness:0.5, roughness:0.3, clearcoat:0.7});
+      for(let i=0;i<LEVELS[levelIdx].obstacles;i++){
+        let tries=0, pos;
+        do {
+          pos = {x:-3+Math.random()*6, z:-3+Math.random()*6};
+          tries++;
+        } while((Math.hypot(pos.x, pos.z)<1.5 || !isFarEnough(pos, obstacles, 1.2)) && tries<30);
+        const o = new THREE.Mesh(obsGeo, obsMat.clone());
+        o.position.set(pos.x, -0.4, pos.z);
+        o.material.color.setHSL(0.1+0.2*i,0.7,0.5);
+        scene.add(o); obstacles.push(o);
+      }
+      // Moving Obstacles
+      for(let i=0;i<LEVELS[levelIdx].movObs;i++){
+        let tries=0, pos;
+        do {
+          pos = {x:-3+Math.random()*6, z:-3+Math.random()*6};
+          tries++;
+        } while((Math.hypot(pos.x, pos.z)<1.5 || !isFarEnough(pos, movingObstacles, 1.5)) && tries<30);
+        const mGeo = new THREE.BoxGeometry(0.7,0.7,0.7);
+        const mMat = new THREE.MeshPhysicalMaterial({color:0xff2222, metalness:0.7, roughness:0.2, clearcoat:0.8});
+        const m = new THREE.Mesh(mGeo, mMat);
+        m.position.set(pos.x, 0.1, pos.z);
+        m.userData = {dir: Math.random()<0.5?'x':'z', phase: Math.random()*Math.PI*2};
+        scene.add(m); movingObstacles.push(m);
+      }
+      // Powerups (magnet, slowmo, extra life)
+      if(levelIdx>0) {
+        for(let i=0;i<2;i++){
+          let tries=0, pos;
+          do {
+            pos = {x:-4+Math.random()*8, z:-4+Math.random()*8};
+            tries++;
+          } while((Math.hypot(pos.x, pos.z)<1.5 || !isFarEnough(pos, powerups, 1.5)) && tries<30);
+          const pGeo = new THREE.OctahedronGeometry(0.25);
+          const pMat = new THREE.MeshPhysicalMaterial({color:[0x00ff99,0xffe100,0xff0055][i%3], metalness:0.8, roughness:0.2, clearcoat:1});
+          const p = new THREE.Mesh(pGeo, pMat);
+          p.position.set(pos.x,0.4,pos.z);
+          p.userData = {type: ['magnet','slowmo','life'][i%3]};
+          scene.add(p); powerups.push(p);
+        }
+      }
+      document.getElementById('game-ui').textContent = 'Level '+(levelIdx+1)+' | Score: 0 / '+LEVELS[levelIdx].gems;
+      document.getElementById('score-float').textContent = 'Score: '+totalScore;
+      document.getElementById('lives-ui').textContent = 'Lives: '+lives;
+      document.getElementById('timer-ui').textContent = 'Time: '+timer;
+    }
+    setupLevel(currentLevel);
+    // Camera
+    camera.position.set(0,2.5,8); camera.lookAt(0,0,0);
+    // Controls
+    let velY=0, onGround=true, keys={}, started=false;
+    window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;});
+    window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+    document.getElementById('start-btn').onclick = function() {
+      document.getElementById('start-screen').style.display = 'none';
+      started = true;
+      playMusic();
+      setupLevel(0);
+      currentLevel = 0;
+      totalScore = 0;
+      lives = 3;
+      timer = 0;
+      document.getElementById('score-float').textContent = 'Score: 0';
+      document.getElementById('lives-ui').textContent = 'Lives: 3';
+      document.getElementById('timer-ui').textContent = 'Time: 0';
+    };
+    // Level complete animation
+    function showLevelComplete() {
+      const ui = document.getElementById('game-ui');
+      ui.textContent = 'Level Complete!';
+      ui.style.color = '#00ff99';
+      playSFX('sfx-win');
+      particleBurst(0,0);
+      setTimeout(()=>{
+        ui.style.color = '#fff';
+        currentLevel++;
+        if(currentLevel < LEVELS.length) {
+          setupLevel(currentLevel);
+        } else {
+          ui.textContent = 'You Win All Levels! 🎉';
+          stopMusic();
+          setTimeout(()=>{
+            document.getElementById('start-screen').style.display = 'flex';
+            started = false;
+          }, 2000);
+        }
+      }, 1200);
+    }
+    // Game loop
+    document.getElementById('pause-btn').onclick = function() { paused = !paused; this.textContent = paused ? 'RESUME' : 'PAUSE'; };
+    window.addEventListener('keydown',e=>{if(e.key==='r') { setupLevel(currentLevel); }});
+    window.addEventListener('keydown',e=>{if(e.key==='k') { skin=(skin+1)%playerSkins.length; player.material.color.setHex(playerSkins[skin]); }});
+    function animateGame(){
+      requestAnimationFrame(animateGame);
+      if(!started||paused) return;
+      if(win) return;
+      // Timer
+      timer += slowMotion?0.02:0.06;
+      document.getElementById('timer-ui').textContent = 'Time: '+Math.floor(timer);
+      // Movement
+      let moveX=0,moveZ=0,speed=slowMotion?0.07:0.13;
+      if(keys['arrowup']||keys['w']) moveZ=-speed;
+      if(keys['arrowdown']||keys['s']) moveZ=speed;
+      if(keys['arrowleft']||keys['a']) moveX=-speed;
+      if(keys['arrowright']||keys['d']) moveX=speed;
+      player.position.x+=moveX;
+      player.position.z+=moveZ;
+      // Boundaries
+      player.position.x=Math.max(-4.5,Math.min(4.5,player.position.x));
+      player.position.z=Math.max(-4.5,Math.min(4.5,player.position.z));
+      // Gravity & Jump
+      if(onGround&&(keys[' ']||keys['space'])){velY=0.19;onGround=false;playSFX('sfx-jump');particleBurst(player.position.x,player.position.y);}
+      velY-=0.009;
+      player.position.y+=velY;
+      if(player.position.y<=0.1){player.position.y=0.1;velY=0;onGround=true;}
+      // Camera shake
+      if(shake>0){
+        camera.position.x = Math.random()*0.2-0.1;
+        camera.position.y = 2.5+Math.random()*0.2-0.1;
+        shake--;
+      } else {
+        camera.position.set(0,2.5,8);
+      }
+      // Moving Obstacles (move back and forth)
+      movingObstacles.forEach((m,i)=>{
+        let t = performance.now()/700 + m.userData.phase;
+        if(m.userData.dir==='x') m.position.x = Math.sin(t)*3;
+        else m.position.z = Math.cos(t)*3;
+        // Collision
+        if(Math.abs(player.position.x-m.position.x)<0.7&&Math.abs(player.position.z-m.position.z)<0.7&&player.position.y<1.2){
+          shake=10; lives--; playSFX('sfx-lose');
+          if(lives<=0){
+            win=true; document.getElementById('game-ui').textContent='Game Over!'; stopMusic(); showLeaderboard(); setTimeout(()=>{document.getElementById('start-screen').style.display='flex'; started=false;},2000); return;
+          }
+          setupLevel(currentLevel); return;
+        }
+      });
+      // Static Obstacles (bounce)
+      obstacles.forEach(obs=>{
+        if(Math.abs(player.position.x-obs.position.x)<0.6&&Math.abs(player.position.z-obs.position.z)<0.6&&player.position.y<0.8){
+          if(moveX!==0) player.position.x-=moveX*1.2;
+          if(moveZ!==0) player.position.z-=moveZ*1.2;
+          obs.material.emissive=new THREE.Color(0xffaa00);
+        }else{
+          obs.material.emissive=new THREE.Color(0x000000);
+        }
+      });
+      // Powerups
+      powerups.forEach((p,i)=>{
+        if(p.visible && Math.abs(player.position.x-p.position.x)<0.7 && Math.abs(player.position.z-p.position.z)<0.7 && player.position.y<1.2){
+          p.visible=false; playSFX('sfx-powerup');
+          if(p.userData.type==='magnet'){ gemMagnet=true; setTimeout(()=>{gemMagnet=false;},4000); }
+          if(p.userData.type==='slowmo'){ slowMotion=true; setTimeout(()=>{slowMotion=false;},4000); }
+          if(p.userData.type==='life'){ lives++; document.getElementById('lives-ui').textContent = 'Lives: '+lives; }
+        }
+        if(p.visible) p.rotation.y+=0.04;
+      });
+      // Gem Magnet
+      if(gemMagnet){
+        gems.forEach(g=>{
+          if(g.visible){
+            let dx=player.position.x-g.position.x, dz=player.position.z-g.position.z;
+            let dist=Math.hypot(dx,dz);
+            if(dist<2){g.position.x+=dx*0.04;g.position.z+=dz*0.04;}
+          }
+        });
+      }
+      // Gems
+      let collected = 0;
+      gems.forEach((g,i)=>{
+        if(g.visible && Math.abs(player.position.x-g.position.x)<0.6 && Math.abs(player.position.z-g.position.z)<0.6 && player.position.y<1.2){
+          g.visible=false;score++;totalScore++;
+          playSFX('sfx-collect');
+          particleBurst(g.position.x,g.position.y);
+          // Color trail
+          for(let t=0;t<6;t++){
+            const tr=document.createElement('div');tr.className='trail';tr.style.width=tr.style.height='8px';tr.style.background=`hsl(${Math.random()*360},90%,60%)`;
+            tr.style.left=(canvas.offsetLeft+300+player.position.x*30+Math.random()*10-5)+'px';
+            tr.style.top=(canvas.offsetTop+200-player.position.y*30+Math.random()*10-5)+'px';
+            document.body.appendChild(tr);setTimeout(()=>{tr.style.opacity=0;},200);setTimeout(()=>{tr.remove();},400);
+          }
+          document.getElementById('game-ui').textContent = 'Level '+(currentLevel+1)+' | Score: '+score+' / '+LEVELS[currentLevel].gems;
+          document.getElementById('score-float').textContent = 'Score: '+totalScore;
+        }
+        if(g.visible) g.rotation.y+=0.04;
+        else collected++;
+      });
+      if(collected === LEVELS[currentLevel].gems && !win) {
+        win = true;
+        confettiBurst();
+        showLeaderboard();
+        showLevelComplete();
+      }
+      renderer.render(scene,camera);
+    }
+    animateGame();
+  </script>
+</body>
+</html>
