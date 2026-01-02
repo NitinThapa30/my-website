@@ -1081,6 +1081,97 @@
             scene.add(pyramid);
         }
 
+        // Create floating torus
+        const tori = [];
+        for(let i = 0; i < 5; i++) {
+            const geometry = new THREE.TorusGeometry(1.2, 0.4, 8, 16);
+            const material = new THREE.MeshBasicMaterial({
+                color: Math.random() > 0.5 ? 0xa020f0 : 0x00f5ff,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.35
+            });
+            const torus = new THREE.Mesh(geometry, material);
+            torus.position.set(
+                (Math.random() - 0.5) * 50,
+                (Math.random() - 0.5) * 50,
+                (Math.random() - 0.5) * 50
+            );
+            torus.rotation.set(
+                Math.random() * Math.PI,
+                Math.random() * Math.PI,
+                Math.random() * Math.PI
+            );
+            tori.push(torus);
+            scene.add(torus);
+        }
+
+        // Create floating octahedrons
+        const octahedrons = [];
+        for(let i = 0; i < 6; i++) {
+            const geometry = new THREE.OctahedronGeometry(0.9);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0xff6ec7,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.3
+            });
+            const octahedron = new THREE.Mesh(geometry, material);
+            octahedron.position.set(
+                (Math.random() - 0.5) * 48,
+                (Math.random() - 0.5) * 48,
+                (Math.random() - 0.5) * 48
+            );
+            octahedron.rotation.set(
+                Math.random() * Math.PI,
+                Math.random() * Math.PI,
+                Math.random() * Math.PI
+            );
+            octahedrons.push(octahedron);
+            scene.add(octahedron);
+        }
+
+        // Create floating dodecahedrons
+        const dodecahedrons = [];
+        for(let i = 0; i < 4; i++) {
+            const geometry = new THREE.DodecahedronGeometry(0.8);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x00ffff,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.4
+            });
+            const dodecahedron = new THREE.Mesh(geometry, material);
+            dodecahedron.position.set(
+                (Math.random() - 0.5) * 55,
+                (Math.random() - 0.5) * 55,
+                (Math.random() - 0.5) * 55
+            );
+            dodecahedron.rotation.set(
+                Math.random() * Math.PI,
+                Math.random() * Math.PI,
+                Math.random() * Math.PI
+            );
+            dodecahedrons.push(dodecahedron);
+            scene.add(dodecahedron);
+        }
+
+        // Add multiple lights for better 3D effect
+        const ambientLight = new THREE.AmbientLight(0xa020f0, 0.3);
+        scene.add(ambientLight);
+        
+        const pointLight1 = new THREE.PointLight(0x00f5ff, 1.5, 150);
+        pointLight1.position.set(30, 30, 30);
+        scene.add(pointLight1);
+        
+        const pointLight2 = new THREE.PointLight(0xa020f0, 1, 150);
+        pointLight2.position.set(-40, 20, -40);
+        scene.add(pointLight2);
+        
+        const pointLight3 = new THREE.PointLight(0xffaa00, 0.8, 150);
+        pointLight3.position.set(0, -50, 50);
+        scene.add(pointLight3);
+
         camera.position.z = 20;
 
         // Mouse interaction
@@ -1132,6 +1223,34 @@
                 pyramid.rotation.y += 0.004;
                 pyramid.position.z += Math.sin(Date.now() * 0.001 + index * 0.7) * 0.008;
             });
+
+            // Animate torus
+            tori.forEach((torus, index) => {
+                torus.rotation.x += 0.0025;
+                torus.rotation.y += 0.0035;
+                torus.position.y += Math.cos(Date.now() * 0.001 + index * 0.4) * 0.006;
+            });
+
+            // Animate octahedrons
+            octahedrons.forEach((octahedron, index) => {
+                octahedron.rotation.x += 0.003;
+                octahedron.rotation.z += 0.002;
+                octahedron.position.x += Math.sin(Date.now() * 0.001 + index * 0.6) * 0.007;
+            });
+
+            // Animate dodecahedrons
+            dodecahedrons.forEach((dodecahedron, index) => {
+                dodecahedron.rotation.x += 0.0015;
+                dodecahedron.rotation.y += 0.0025;
+                dodecahedron.position.z += Math.cos(Date.now() * 0.0008 + index * 0.5) * 0.009;
+            });
+
+            // Animate lights for dynamic effect
+            pointLight1.position.x = Math.sin(Date.now() * 0.0003) * 50;
+            pointLight1.position.y = Math.cos(Date.now() * 0.0002) * 40 + 30;
+            pointLight2.position.z = Math.sin(Date.now() * 0.0002) * 60 - 40;
+            pointLight3.position.x = Math.cos(Date.now() * 0.0004) * 40;
+            pointLight3.position.y = Math.sin(Date.now() * 0.0003) * 50 - 50;
 
             // Camera follows mouse
             camera.position.x += (mouseX * 5 - camera.position.x) * 0.05;
