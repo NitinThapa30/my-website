@@ -4,33 +4,30 @@
   <meta charset="UTF-8">
   <title>3D Web Game Demo</title>
   <style>
-    html, body { height: 100%; margin: 0; background: #101024; }
+    html, body { height: 100%; margin: 0; background: #050508; overflow: hidden; }
     body { display: flex; align-items: center; justify-content: center; height: 100vh; }
-    #game-canvas { width: 600px; height: 400px; display: block; }
+    #game-canvas { width: 100vw; height: 100vh; display: block; position: absolute; top: 0; left: 0; z-index: 1; }
     #game-ui { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 1.1rem; z-index: 2; pointer-events: none; font-family: 'Press Start 2P', monospace; letter-spacing: 1px; text-shadow: 0 2px 8px #00f5ff, 0 0 2px #fff; }
-    .particle { position: absolute; pointer-events: none; border-radius: 50%; opacity: 0.7; }
-    #start-screen { position: absolute; left: 0; top: 0; width: 100vw; height: 100vh; background: linear-gradient(120deg,#23234a 60%,#00f5ff 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+    .particle { position: absolute; pointer-events: none; border-radius: 50%; opacity: 0.7; z-index: 3; }
+    #start-screen { position: absolute; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(5, 5, 8, 0.85); backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
     #start-screen h1 { color: #fff; font-family: 'Press Start 2P', monospace; font-size: 2.2em; text-shadow: 0 0 16px #00f5ff; }
     #start-btn { font-family: 'Press Start 2P', monospace; font-size: 1.1em; background: #00f5ff; color: #23234a; border: none; border-radius: 8px; padding: 18px 36px; margin-top: 32px; cursor: pointer; box-shadow: 0 0 16px #00f5ff; transition: background 0.2s; }
     #start-btn:hover { background: #fff; color: #00f5ff; }
     #score-float { position: absolute; top: 24px; right: 40px; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 1.2em; text-shadow: 0 0 8px #00f5ff; z-index: 2; }
-  #lives-ui { position: absolute; bottom: 24px; left: 40px; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 1.2em; text-shadow: 0 0 8px #ff0055; z-index: 2; }
-  #timer-ui { position: absolute; top: 60px; right: 40px; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 1.1em; text-shadow: 0 0 8px #00f5ff; z-index: 2; }
-  #pause-btn { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); font-family: 'Press Start 2P', monospace; font-size: 1em; background: #fff; color: #23234a; border: none; border-radius: 8px; padding: 8px 24px; cursor: pointer; box-shadow: 0 0 8px #00f5ff; z-index: 3; }
-    .animated-bg { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; background: radial-gradient(circle at 60% 40%, #00f5ff44 0%, #23234a 80%); animation: bgmove 8s linear infinite alternate; }
-    @keyframes bgmove { 0% { background-position: 60% 40%; } 100% { background-position: 40% 60%; } }
+    #lives-ui { position: absolute; bottom: 24px; left: 40px; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 1.2em; text-shadow: 0 0 8px #ff0055; z-index: 2; }
+    #timer-ui { position: absolute; top: 60px; right: 40px; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 1.1em; text-shadow: 0 0 8px #00f5ff; z-index: 2; }
+    #pause-btn { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); font-family: 'Press Start 2P', monospace; font-size: 1em; background: #fff; color: #23234a; border: none; border-radius: 8px; padding: 8px 24px; cursor: pointer; box-shadow: 0 0 8px #00f5ff; z-index: 3; }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="animated-bg"></div>
   <div id="start-screen"><h1>3D GEM QUEST</h1><button id="start-btn">START GAME</button></div>
   <div id="game-ui">WASD/Arrows: Move | Space: Jump | Collect all gems!</div>
   <div id="score-float">Score: 0</div>
   <div id="timer-ui">Time: 0</div>
   <button id="pause-btn">PAUSE</button>
   <div id="lives-ui">Lives: 3</div>
-  <canvas id="game-canvas" width="600" height="400"></canvas>
+  <canvas id="game-canvas"></canvas>
   <audio id="sfx-collect" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b7b6b2.mp3" preload="auto"></audio>
   <audio id="sfx-jump" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b7b6b2.mp3" preload="auto"></audio>
   <audio id="sfx-win" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b7b6b2.mp3" preload="auto"></audio>
@@ -43,34 +40,62 @@
     const canvas = document.getElementById('game-canvas');
     const scene = new THREE.Scene();
     scene.background = null;
-    const camera = new THREE.PerspectiveCamera(60, 600/400, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
     renderer.setClearColor(0x000000,0);
-    renderer.setSize(600, 400);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
     // Enhanced Lighting
-    const light = new THREE.PointLight(0xffffff, 1.7, 100); light.position.set(10, 10, 10); scene.add(light);
-    const amb = new THREE.AmbientLight(0x404060, 1.2); scene.add(amb);
-    const spot = new THREE.SpotLight(0x00fff7, 0.7, 30, Math.PI/6, 0.5, 1); spot.position.set(0, 8, 0); scene.add(spot);
+    const light = new THREE.PointLight(0xffffff, 1.2, 100); 
+    light.position.set(10, 20, 10); 
+    light.castShadow = true;
+    light.shadow.mapSize.width = 1024;
+    light.shadow.mapSize.height = 1024;
+    scene.add(light);
+    
+    const amb = new THREE.AmbientLight(0x404060, 1.5); scene.add(amb);
+    const spot = new THREE.SpotLight(0x00fff7, 1.0, 50, Math.PI/6, 0.5, 1); 
+    spot.position.set(0, 15, 0); 
+    spot.castShadow = true;
+    scene.add(spot);
+
     // Platform with texture
-    const platGeo = new THREE.BoxGeometry(10, 0.5, 10);
-    const platMat = new THREE.MeshPhysicalMaterial({color:0x23234a, metalness:0.7, roughness:0.2, clearcoat:0.7, iridescence:0.5});
-    const platform = new THREE.Mesh(platGeo, platMat); platform.position.y = -1.5; scene.add(platform);
-    // Player
+    const platGeo = new THREE.BoxGeometry(40, 0.5, 40);
+    const platMat = new THREE.MeshPhysicalMaterial({color:0x23234a, metalness:0.8, roughness:0.2, clearcoat:0.5, iridescence:0.2});
+    const platform = new THREE.Mesh(platGeo, platMat); 
+    platform.position.y = -1.5; 
+    platform.receiveShadow = true;
+    scene.add(platform);
+
+    // Player Grouping (for independent mesh rotation and position)
+    const playerGroup = new THREE.Group();
+    playerGroup.position.set(0, 0.1, 0);
+    scene.add(playerGroup);
+
+    // Player Mesh
     const playerGeo = new THREE.IcosahedronGeometry(0.5, 1);
     const playerMat = new THREE.MeshPhysicalMaterial({color:0x00f5ff, metalness:0.9, roughness:0.1, clearcoat:1, iridescence:1, transmission:0.5});
-    const player = new THREE.Mesh(playerGeo, playerMat); player.position.y = 0.1; scene.add(player);
-    // Level data (easier, more gems, fewer obstacles)
+    const player = new THREE.Mesh(playerGeo, playerMat); 
+    player.castShadow = true;
+    playerGroup.add(player);
+
+    // Level data (larger scale)
     const LEVELS = [
-      { gems: 4, obstacles: 2, movObs: 1 },
-      { gems: 5, obstacles: 3, movObs: 2 },
-      { gems: 6, obstacles: 3, movObs: 2 },
-      { gems: 7, obstacles: 4, movObs: 3 },
-      { gems: 8, obstacles: 5, movObs: 3 }
+      { gems: 6, obstacles: 4, movObs: 2, scale: 12 },
+      { gems: 8, obstacles: 6, movObs: 4, scale: 15 },
+      { gems: 10, obstacles: 8, movObs: 5, scale: 18 },
+      { gems: 12, obstacles: 12, movObs: 6, scale: 20 },
+      { gems: 15, obstacles: 15, movObs: 8, scale: 20 }
     ];
+
     let currentLevel = 0;
     let gems = [], obstacles = [], movingObstacles = [], powerups = [], score = 0, win = false, totalScore = 0, lives = 3, timer = 0, paused = false, leaderboard = [];
     let gemMagnet = false, slowMotion = false, skin = 0, shake = 0;
     const playerSkins = [0x00f5ff, 0xff0055, 0x00ff99, 0xffe100];
+
     function playSFX(id) {
       const el = document.getElementById(id); if(el) { el.currentTime=0; el.play(); }
     }
@@ -82,31 +107,36 @@
       const music = document.getElementById('bg-music');
       if(music && !music.paused) { music.pause(); music.currentTime=0; }
     }
+
     function particleBurst(x, y) {
       for(let i=0;i<12;i++){
         const p = document.createElement('div');
         p.className = 'particle';
         p.style.width = p.style.height = (6+Math.random()*8)+'px';
         p.style.background = `hsl(${Math.random()*360},90%,60%)`;
-        p.style.left = (canvas.offsetLeft+300+x*30+Math.random()*20-10)+'px';
-        p.style.top = (canvas.offsetTop+200-y*30+Math.random()*20-10)+'px';
+        p.style.left = (canvas.offsetLeft+300+Math.random()*20-10)+'px';
+        p.style.top = (canvas.offsetTop+200+Math.random()*20-10)+'px';
         document.body.appendChild(p);
-        setTimeout(()=>{p.style.transform=`translate(${Math.random()*60-30}px,${Math.random()*60-30}px) scale(0.2)`;p.style.opacity=0;},10);
+        setTimeout(()=>{p.style.transform=`translate(${Math.random()*80-40}px,${Math.random()*80-40}px) scale(0.2)`;p.style.opacity=0;},10);
         setTimeout(()=>{p.remove();},600+Math.random()*200);
       }
     }
+
     function confettiBurst() {
       for(let i=0;i<30;i++){
         const c = document.createElement('div');
         c.className = 'confetti';
+        c.style.position = 'absolute';
+        c.style.width = '8px'; c.style.height = '16px';
         c.style.background = `hsl(${Math.random()*360},90%,60%)`;
         c.style.left = (window.innerWidth/2+Math.random()*200-100)+'px';
         c.style.top = (window.innerHeight/2+Math.random()*100-50)+'px';
         document.body.appendChild(c);
-        setTimeout(()=>{c.style.transform=`translate(${Math.random()*200-100}px,${Math.random()*200-100}px) scale(0.2)`;c.style.opacity=0;},10);
+        setTimeout(()=>{c.style.transform=`translate(${Math.random()*300-150}px,${Math.random()*300-150}px) rotate(${Math.random()*360}deg) scale(0.2)`;c.style.opacity=0;},10);
         setTimeout(()=>{c.remove();},900+Math.random()*400);
       }
     }
+
     function showLeaderboard() {
       const lb = document.getElementById('leaderboard');
       leaderboard.push({score: totalScore, time: timer});
@@ -117,96 +147,109 @@
         setTimeout(()=>{lb.style.display='none';},5000);
       }
     }
+
     function isFarEnough(pos, arr, minDist) {
       for(let i=0;i<arr.length;i++){
         if(Math.hypot(pos.x-arr[i].position.x, pos.z-arr[i].position.z)<minDist) return false;
       }
       return true;
     }
+
     function setupLevel(levelIdx) {
-      // Remove old
       gems.forEach(g=>scene.remove(g));
       obstacles.forEach(o=>scene.remove(o));
       movingObstacles.forEach(o=>scene.remove(o));
       powerups.forEach(p=>scene.remove(p));
-      gems = [];
-      obstacles = [];
-      movingObstacles = [];
-      powerups = [];
-      score = 0;
-      win = false;
-      player.position.set(0,0.1,0);
+      gems = []; obstacles = []; movingObstacles = []; powerups = [];
+      score = 0; win = false;
+      
+      velX = 0; velZ = 0; velY = 0;
+      playerGroup.position.set(0,0.1,0);
       player.material.color.setHex(playerSkins[skin]);
+      
+      const scale = LEVELS[levelIdx].scale;
+      
       // Gems
       const gemGeo = new THREE.TetrahedronGeometry(0.3);
       const gemMat = new THREE.MeshPhysicalMaterial({color:0xff00ea, metalness:0.7, roughness:0.1, clearcoat:1, iridescence:1});
       for(let i=0;i<LEVELS[levelIdx].gems;i++){
         let tries=0, pos;
-        do {
-          pos = {x:-4+Math.random()*8, z:-4+Math.random()*8};
-          tries++;
-        } while((Math.hypot(pos.x, pos.z)<1.5 || !isFarEnough(pos, gems, 1.2)) && tries<30);
+        do { pos = {x:(Math.random()-0.5)*scale*1.8, z:(Math.random()-0.5)*scale*1.8}; tries++; } 
+        while((Math.hypot(pos.x, pos.z)<2 || !isFarEnough(pos, gems, 2)) && tries<30);
         const g = new THREE.Mesh(gemGeo, gemMat.clone());
-        g.position.set(pos.x,0.3,pos.z);
+        g.position.set(pos.x, 0.4, pos.z);
         g.material.color.setHSL(i/LEVELS[levelIdx].gems,0.8,0.6);
+        g.castShadow = true;
         scene.add(g); gems.push(g);
       }
-      // Static Obstacles
-      const obsGeo = new THREE.CylinderGeometry(0.3,0.3,1.2,24);
-      const obsMat = new THREE.MeshPhysicalMaterial({color:0xffaa00, metalness:0.5, roughness:0.3, clearcoat:0.7});
+
+      // Static Asteroid Obstacles
+      const obsGeo = new THREE.DodecahedronGeometry(0.6, 0);
+      const obsMat = new THREE.MeshPhysicalMaterial({color:0xffaa00, metalness:0.3, roughness:0.8, clearcoat:0.2});
       for(let i=0;i<LEVELS[levelIdx].obstacles;i++){
         let tries=0, pos;
-        do {
-          pos = {x:-3+Math.random()*6, z:-3+Math.random()*6};
-          tries++;
-        } while((Math.hypot(pos.x, pos.z)<1.5 || !isFarEnough(pos, obstacles, 1.2)) && tries<30);
+        do { pos = {x:(Math.random()-0.5)*scale*1.8, z:(Math.random()-0.5)*scale*1.8}; tries++; } 
+        while((Math.hypot(pos.x, pos.z)<2 || !isFarEnough(pos, obstacles, 2)) && tries<30);
         const o = new THREE.Mesh(obsGeo, obsMat.clone());
-        o.position.set(pos.x, -0.4, pos.z);
-        o.material.color.setHSL(0.1+0.2*i,0.7,0.5);
+        o.position.set(pos.x, -0.2 + Math.random()*0.3, pos.z);
+        o.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+        o.scale.setScalar(0.8 + Math.random()*0.5);
+        o.material.color.setHSL(0.1+0.05*i,0.7,0.4);
+        o.castShadow = true; o.receiveShadow = true;
         scene.add(o); obstacles.push(o);
       }
+
       // Moving Obstacles
+      const mGeo = new THREE.TetrahedronGeometry(0.6, 1);
+      const mMat = new THREE.MeshPhysicalMaterial({color:0xff2222, metalness:0.7, roughness:0.2, clearcoat:0.8});
       for(let i=0;i<LEVELS[levelIdx].movObs;i++){
         let tries=0, pos;
-        do {
-          pos = {x:-3+Math.random()*6, z:-3+Math.random()*6};
-          tries++;
-        } while((Math.hypot(pos.x, pos.z)<1.5 || !isFarEnough(pos, movingObstacles, 1.5)) && tries<30);
-        const mGeo = new THREE.BoxGeometry(0.7,0.7,0.7);
-        const mMat = new THREE.MeshPhysicalMaterial({color:0xff2222, metalness:0.7, roughness:0.2, clearcoat:0.8});
+        do { pos = {x:(Math.random()-0.5)*scale*1.8, z:(Math.random()-0.5)*scale*1.8}; tries++; } 
+        while((Math.hypot(pos.x, pos.z)<2 || !isFarEnough(pos, movingObstacles, 3)) && tries<30);
         const m = new THREE.Mesh(mGeo, mMat);
-        m.position.set(pos.x, 0.1, pos.z);
-        m.userData = {dir: Math.random()<0.5?'x':'z', phase: Math.random()*Math.PI*2};
+        m.position.set(pos.x, 0.2, pos.z);
+        m.userData = {dir: Math.random()<0.5?'x':'z', phase: Math.random()*Math.PI*2, range: 3+Math.random()*4, center:{x:pos.x, z:pos.z}};
+        m.castShadow = true; m.receiveShadow = true;
         scene.add(m); movingObstacles.push(m);
       }
-      // Powerups (magnet, slowmo, extra life)
+
+      // Powerups
       if(levelIdx>0) {
         for(let i=0;i<2;i++){
           let tries=0, pos;
-          do {
-            pos = {x:-4+Math.random()*8, z:-4+Math.random()*8};
-            tries++;
-          } while((Math.hypot(pos.x, pos.z)<1.5 || !isFarEnough(pos, powerups, 1.5)) && tries<30);
-          const pGeo = new THREE.OctahedronGeometry(0.25);
+          do { pos = {x:(Math.random()-0.5)*scale*1.8, z:(Math.random()-0.5)*scale*1.8}; tries++; } 
+          while((Math.hypot(pos.x, pos.z)<2 || !isFarEnough(pos, powerups, 2)) && tries<30);
+          const pGeo = new THREE.OctahedronGeometry(0.3);
           const pMat = new THREE.MeshPhysicalMaterial({color:[0x00ff99,0xffe100,0xff0055][i%3], metalness:0.8, roughness:0.2, clearcoat:1});
           const p = new THREE.Mesh(pGeo, pMat);
-          p.position.set(pos.x,0.4,pos.z);
+          p.position.set(pos.x,0.5,pos.z);
           p.userData = {type: ['magnet','slowmo','life'][i%3]};
+          p.castShadow = true;
           scene.add(p); powerups.push(p);
         }
       }
+
       document.getElementById('game-ui').textContent = 'Level '+(levelIdx+1)+' | Score: 0 / '+LEVELS[levelIdx].gems;
       document.getElementById('score-float').textContent = 'Score: '+totalScore;
       document.getElementById('lives-ui').textContent = 'Lives: '+lives;
-      document.getElementById('timer-ui').textContent = 'Time: '+timer;
+      document.getElementById('timer-ui').textContent = 'Time: '+Math.floor(timer);
+      
+      // Reset Camera
+      camera.position.set(0, 5, 8);
+      camera.lookAt(playerGroup.position);
     }
+    
+    // Physics & Enhanced Controls
+    let velX=0, velZ=0, velY=0;
+    const accel = 0.015, friction = 0.92, airFriction = 0.98, maxSpeed = 0.25, jumpForce = 0.24, gravity = 0.012;
+    let onGround=true, keys={}, started=false;
+    let trailTimer = 0;
+    
     setupLevel(currentLevel);
-    // Camera
-    camera.position.set(0,2.5,8); camera.lookAt(0,0,0);
-    // Controls
-    let velY=0, onGround=true, keys={}, started=false;
+
     window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;});
     window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+
     document.getElementById('start-btn').onclick = function() {
       document.getElementById('start-screen').style.display = 'none';
       started = true;
@@ -216,17 +259,14 @@
       totalScore = 0;
       lives = 3;
       timer = 0;
-      document.getElementById('score-float').textContent = 'Score: 0';
-      document.getElementById('lives-ui').textContent = 'Lives: 3';
-      document.getElementById('timer-ui').textContent = 'Time: 0';
     };
-    // Level complete animation
+
     function showLevelComplete() {
       const ui = document.getElementById('game-ui');
       ui.textContent = 'Level Complete!';
-      ui.style.color = '#00ff99';
+      ui.style.color = '#00f5ff';
       playSFX('sfx-win');
-      particleBurst(0,0);
+      confettiBurst();
       setTimeout(()=>{
         ui.style.color = '#fff';
         currentLevel++;
@@ -240,113 +280,220 @@
             started = false;
           }, 2000);
         }
-      }, 1200);
+      }, 1500);
     }
-    // Game loop
+
     document.getElementById('pause-btn').onclick = function() { paused = !paused; this.textContent = paused ? 'RESUME' : 'PAUSE'; };
     window.addEventListener('keydown',e=>{if(e.key==='r') { setupLevel(currentLevel); }});
     window.addEventListener('keydown',e=>{if(e.key==='k') { skin=(skin+1)%playerSkins.length; player.material.color.setHex(playerSkins[skin]); }});
+
+    function spawnTrail() {
+      const tr = document.createElement('div');
+      tr.className = 'particle';
+      tr.style.width = tr.style.height = '6px';
+      tr.style.background = `hsl(${Math.random()*360},90%,60%)`;
+      tr.style.left = (canvas.offsetLeft + 300 + (Math.random()*10-5))+'px';
+      tr.style.top = (canvas.offsetTop + 200 + (Math.random()*10-5))+'px';
+      document.body.appendChild(tr);
+      setTimeout(()=>{tr.style.opacity=0;}, 100);
+      setTimeout(()=>{tr.remove();}, 300);
+    }
+
     function animateGame(){
       requestAnimationFrame(animateGame);
       if(!started||paused) return;
       if(win) return;
+      
       // Timer
-      timer += slowMotion?0.02:0.06;
+      timer += slowMotion ? 0.016 : 0.032; 
       document.getElementById('timer-ui').textContent = 'Time: '+Math.floor(timer);
-      // Movement
-      let moveX=0,moveZ=0,speed=slowMotion?0.07:0.13;
-      if(keys['arrowup']||keys['w']) moveZ=-speed;
-      if(keys['arrowdown']||keys['s']) moveZ=speed;
-      if(keys['arrowleft']||keys['a']) moveX=-speed;
-      if(keys['arrowright']||keys['d']) moveX=speed;
-      player.position.x+=moveX;
-      player.position.z+=moveZ;
-      // Boundaries
-      player.position.x=Math.max(-4.5,Math.min(4.5,player.position.x));
-      player.position.z=Math.max(-4.5,Math.min(4.5,player.position.z));
-      // Gravity & Jump
-      if(onGround&&(keys[' ']||keys['space'])){velY=0.19;onGround=false;playSFX('sfx-jump');particleBurst(player.position.x,player.position.y);}
-      velY-=0.009;
-      player.position.y+=velY;
-      if(player.position.y<=0.1){player.position.y=0.1;velY=0;onGround=true;}
-      // Camera shake
-      if(shake>0){
-        camera.position.x = Math.random()*0.2-0.1;
-        camera.position.y = 2.5+Math.random()*0.2-0.1;
-        shake--;
-      } else {
-        camera.position.set(0,2.5,8);
+      
+      // Momentum Physics
+      let speedMult = slowMotion ? 0.6 : 1.0;
+      let moveAcc = accel * speedMult;
+      
+      if(keys['arrowup']||keys['w']) velZ -= moveAcc * (onGround ? 1 : 0.5);
+      if(keys['arrowdown']||keys['s']) velZ += moveAcc * (onGround ? 1 : 0.5);
+      if(keys['arrowleft']||keys['a']) velX -= moveAcc * (onGround ? 1 : 0.5);
+      if(keys['arrowright']||keys['d']) velX += moveAcc * (onGround ? 1 : 0.5);
+      
+      // Speed Clamping
+      let currentSpeed = Math.hypot(velX, velZ);
+      if(currentSpeed > maxSpeed * speedMult) {
+        let ratio = (maxSpeed * speedMult) / currentSpeed;
+        velX *= ratio;
+        velZ *= ratio;
       }
-      // Moving Obstacles (move back and forth)
+      
+      // Friction Application
+      velX *= onGround ? friction : airFriction;
+      velZ *= onGround ? friction : airFriction;
+      
+      // Update Position
+      playerGroup.position.x += velX;
+      playerGroup.position.z += velZ;
+      
+      // Smooth Mesh Rotation (Face Direction)
+      if(currentSpeed > 0.01) {
+        let targetRot = Math.atan2(velX, velZ);
+        let diff = targetRot - playerGroup.rotation.y;
+        while(diff < -Math.PI) diff += Math.PI*2;
+        while(diff > Math.PI) diff -= Math.PI*2;
+        playerGroup.rotation.y += diff * 0.2;
+        
+        // Trail Logic
+        trailTimer++;
+        if(trailTimer > 3 && onGround) {
+          spawnTrail();
+          trailTimer = 0;
+        }
+      }
+      
+      // Expanded Boundaries
+      const mapSize = 19;
+      if(playerGroup.position.x > mapSize) { playerGroup.position.x = mapSize; velX *= -0.5; }
+      if(playerGroup.position.x < -mapSize) { playerGroup.position.x = -mapSize; velX *= -0.5; }
+      if(playerGroup.position.z > mapSize) { playerGroup.position.z = mapSize; velZ *= -0.5; }
+      if(playerGroup.position.z < -mapSize) { playerGroup.position.z = -mapSize; velZ *= -0.5; }
+      
+      // Gravity & Jump Arc
+      if(onGround && (keys[' ']||keys['space'])){
+        velY = jumpForce; 
+        onGround = false; 
+        playSFX('sfx-jump');
+      }
+      velY -= gravity;
+      playerGroup.position.y += velY;
+      
+      if(playerGroup.position.y <= 0.1){
+        playerGroup.position.y = 0.1;
+        velY = 0;
+        onGround = true;
+      }
+      
+      // Camera Smoothing (Follows Player)
+      const targetCamX = playerGroup.position.x;
+      const targetCamY = playerGroup.position.y + 5 + Math.max(0, currentSpeed * 2);
+      const targetCamZ = playerGroup.position.z + 8 + Math.max(0, currentSpeed * 2);
+      
+      let camShakeX = shake > 0 ? (Math.random()*0.4-0.2) : 0;
+      let camShakeY = shake > 0 ? (Math.random()*0.4-0.2) : 0;
+      if(shake > 0) shake--;
+
+      camera.position.x += (targetCamX + camShakeX - camera.position.x) * 0.08;
+      camera.position.z += (targetCamZ - camera.position.z) * 0.08;
+      camera.position.y += (targetCamY + camShakeY - camera.position.y) * 0.08;
+      
+      camera.lookAt(playerGroup.position.x, playerGroup.position.y + 0.5, playerGroup.position.z);
+      
+      spot.position.x = playerGroup.position.x;
+      spot.position.z = playerGroup.position.z;
+      
+      // Mesh Spin
+      player.rotation.x += currentSpeed * 2; 
+
+      // Logic - Moving Obstacles
       movingObstacles.forEach((m,i)=>{
-        let t = performance.now()/700 + m.userData.phase;
-        if(m.userData.dir==='x') m.position.x = Math.sin(t)*3;
-        else m.position.z = Math.cos(t)*3;
-        // Collision
-        if(Math.abs(player.position.x-m.position.x)<0.7&&Math.abs(player.position.z-m.position.z)<0.7&&player.position.y<1.2){
-          shake=10; lives--; playSFX('sfx-lose');
+        let t = performance.now() / 1000 + m.userData.phase;
+        let range = m.userData.range;
+        if(m.userData.dir==='x') m.position.x = m.userData.center.x + Math.sin(t)*range;
+        else m.position.z = m.userData.center.z + Math.cos(t)*range;
+        
+        m.rotation.y += 0.02;
+        m.rotation.x += 0.01;
+        
+        // Damage Collision
+        if(Math.abs(playerGroup.position.x-m.position.x)<0.7 && Math.abs(playerGroup.position.z-m.position.z)<0.7 && playerGroup.position.y<1.2){
+          shake = 12; lives--; playSFX('sfx-lose');
+          
+          let dx = playerGroup.position.x - m.position.x;
+          let dz = playerGroup.position.z - m.position.z;
+          let dist = Math.hypot(dx, dz) || 1;
+          velX = (dx/dist) * 0.4;
+          velZ = (dz/dist) * 0.4;
+          velY = 0.15; // Bounce
+          
+          document.getElementById('lives-ui').textContent = 'Lives: '+lives;
           if(lives<=0){
             win=true; document.getElementById('game-ui').textContent='Game Over!'; stopMusic(); showLeaderboard(); setTimeout(()=>{document.getElementById('start-screen').style.display='flex'; started=false;},2000); return;
           }
-          setupLevel(currentLevel); return;
         }
       });
-      // Static Obstacles (bounce)
+      
+      // Logic - Asteroid Collision Bounce
       obstacles.forEach(obs=>{
-        if(Math.abs(player.position.x-obs.position.x)<0.6&&Math.abs(player.position.z-obs.position.z)<0.6&&player.position.y<0.8){
-          if(moveX!==0) player.position.x-=moveX*1.2;
-          if(moveZ!==0) player.position.z-=moveZ*1.2;
-          obs.material.emissive=new THREE.Color(0xffaa00);
-        }else{
-          obs.material.emissive=new THREE.Color(0x000000);
+        let dx = playerGroup.position.x - obs.position.x;
+        let dz = playerGroup.position.z - obs.position.z;
+        let dist = Math.hypot(dx, dz);
+        let collisionDist = 0.5 + obs.scale.x * 0.5; // Estimated collision radius
+        
+        if(dist < collisionDist && playerGroup.position.y < (0.2 + obs.scale.y * 0.5)){
+          let pushFactor = (collisionDist - dist) / dist;
+          velX += dx * pushFactor * 0.1;
+          velZ += dz * pushFactor * 0.1;
+          obs.material.emissive = new THREE.Color(0x331100);
+          setTimeout(()=> { obs.material.emissive.setHex(0x000000); }, 100);
         }
       });
-      // Powerups
+      
+      // Logic - Powerups
       powerups.forEach((p,i)=>{
-        if(p.visible && Math.abs(player.position.x-p.position.x)<0.7 && Math.abs(player.position.z-p.position.z)<0.7 && player.position.y<1.2){
+        if(p.visible && Math.abs(playerGroup.position.x-p.position.x)<0.8 && Math.abs(playerGroup.position.z-p.position.z)<0.8 && playerGroup.position.y<1.2){
           p.visible=false; playSFX('sfx-powerup');
-          if(p.userData.type==='magnet'){ gemMagnet=true; setTimeout(()=>{gemMagnet=false;},4000); }
+          if(p.userData.type==='magnet'){ gemMagnet=true; setTimeout(()=>{gemMagnet=false;},5000); }
           if(p.userData.type==='slowmo'){ slowMotion=true; setTimeout(()=>{slowMotion=false;},4000); }
           if(p.userData.type==='life'){ lives++; document.getElementById('lives-ui').textContent = 'Lives: '+lives; }
         }
-        if(p.visible) p.rotation.y+=0.04;
+        if(p.visible) {
+          p.rotation.y += 0.04;
+          p.position.y = 0.5 + Math.sin(timer*5)*0.1;
+        }
       });
-      // Gem Magnet
-      if(gemMagnet){
+      
+      // Logic - Gem Magnet
+      if(gemMagnet && !win){
         gems.forEach(g=>{
           if(g.visible){
-            let dx=player.position.x-g.position.x, dz=player.position.z-g.position.z;
-            let dist=Math.hypot(dx,dz);
-            if(dist<2){g.position.x+=dx*0.04;g.position.z+=dz*0.04;}
+            let dx = playerGroup.position.x - g.position.x;
+            let dz = playerGroup.position.z - g.position.z;
+            let dist = Math.hypot(dx,dz);
+            if(dist < 5){
+              g.position.x += dx * 0.04;
+              g.position.z += dz * 0.04;
+            }
           }
         });
       }
-      // Gems
+      
       let collected = 0;
       gems.forEach((g,i)=>{
-        if(g.visible && Math.abs(player.position.x-g.position.x)<0.6 && Math.abs(player.position.z-g.position.z)<0.6 && player.position.y<1.2){
-          g.visible=false;score++;totalScore++;
-          playSFX('sfx-collect');
-          particleBurst(g.position.x,g.position.y);
-          // Color trail
-          for(let t=0;t<6;t++){
-            const tr=document.createElement('div');tr.className='trail';tr.style.width=tr.style.height='8px';tr.style.background=`hsl(${Math.random()*360},90%,60%)`;
-            tr.style.left=(canvas.offsetLeft+300+player.position.x*30+Math.random()*10-5)+'px';
-            tr.style.top=(canvas.offsetTop+200-player.position.y*30+Math.random()*10-5)+'px';
-            document.body.appendChild(tr);setTimeout(()=>{tr.style.opacity=0;},200);setTimeout(()=>{tr.remove();},400);
+        if(g.visible && Math.abs(playerGroup.position.x-g.position.x)<0.7 && Math.abs(playerGroup.position.z-g.position.z)<0.7 && playerGroup.position.y<1.2){
+          g.visible=false; score++; totalScore++;
+          
+          // Overlapping SFX
+          const collectSound = document.getElementById('sfx-collect');
+          if(collectSound) {
+            const s = collectSound.cloneNode();
+            s.volume = 0.7;
+            s.play();
           }
+          
           document.getElementById('game-ui').textContent = 'Level '+(currentLevel+1)+' | Score: '+score+' / '+LEVELS[currentLevel].gems;
           document.getElementById('score-float').textContent = 'Score: '+totalScore;
         }
-        if(g.visible) g.rotation.y+=0.04;
-        else collected++;
+        if(g.visible) {
+          g.rotation.y += 0.04;
+          g.position.y = 0.3 + Math.sin(timer*3 + i)*0.05;
+        } else {
+          collected++;
+        }
       });
+      
       if(collected === LEVELS[currentLevel].gems && !win) {
         win = true;
-        confettiBurst();
-        showLeaderboard();
         showLevelComplete();
       }
+      
       renderer.render(scene,camera);
     }
     animateGame();
