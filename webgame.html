@@ -17,10 +17,20 @@
     #lives-ui { position: absolute; bottom: 24px; left: 40px; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 1.2em; text-shadow: 0 0 8px #ff0055; z-index: 2; }
     #timer-ui { position: absolute; top: 60px; right: 40px; color: #fff; font-family: 'Press Start 2P', monospace; font-size: 1.1em; text-shadow: 0 0 8px #00f5ff; z-index: 2; }
     #pause-btn { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); font-family: 'Press Start 2P', monospace; font-size: 1em; background: #fff; color: #23234a; border: none; border-radius: 8px; padding: 8px 24px; cursor: pointer; box-shadow: 0 0 8px #00f5ff; z-index: 3; }
+    /* CRT Effects */
+    .crt::before {
+      content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      z-index: 5; background-size: 100% 2px, 3px 100%; pointer-events: none;
+    }
+    .crt::after {
+      content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+      background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6) 100%); z-index: 6; pointer-events: none;
+    }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="crt">
   <div id="start-screen"><h1>3D GEM QUEST</h1><button id="start-btn">START GAME</button></div>
   <div id="game-ui">WASD/Arrows: Move | Space: Jump | Collect all gems!</div>
   <div id="score-float">Score: 0</div>
@@ -34,8 +44,21 @@
   <audio id="bg-music" src="https://cdn.pixabay.com/audio/2023/03/27/audio_12b6b7b6b2.mp3" preload="auto" loop></audio>
   <audio id="sfx-powerup" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b7b6b2.mp3" preload="auto"></audio>
   <audio id="sfx-lose" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b7b6b2.mp3" preload="auto"></audio>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-  <script>
+  
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
     // 3D Platformer Game Demo with Enhanced Graphics, Sounds, and Start Screen
     const canvas = document.getElementById('game-canvas');
     const scene = new THREE.Scene();
@@ -47,6 +70,17 @@
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // Post-Processing Composer (Neon Bloom)
+    const renderScene = new RenderPass(scene, camera);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+    bloomPass.threshold = 0.2;
+    bloomPass.strength = 1.6; // Intense bloom 
+    bloomPass.radius = 0.5;
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(renderScene);
+    composer.addPass(bloomPass);
 
     // Enhanced Lighting
     const light = new THREE.PointLight(0xffffff, 1.2, 100); 
@@ -62,9 +96,14 @@
     spot.castShadow = true;
     scene.add(spot);
 
-    // Platform with texture
-    const platGeo = new THREE.BoxGeometry(40, 0.5, 40);
-    const platMat = new THREE.MeshPhysicalMaterial({color:0x23234a, metalness:0.8, roughness:0.2, clearcoat:0.5, iridescence:0.2});
+    // Tron Grid Floor
+    const gridHelper = new THREE.GridHelper(60, 60, 0x00f5ff, 0x7b2fff);
+    gridHelper.position.y = -1.24;
+    scene.add(gridHelper);
+
+    // Platform (Black Mirror Abyss)
+    const platGeo = new THREE.BoxGeometry(60, 0.5, 60);
+    const platMat = new THREE.MeshPhysicalMaterial({color:0x000000, metalness:0.9, roughness:0.1, clearcoat:0.1});
     const platform = new THREE.Mesh(platGeo, platMat); 
     platform.position.y = -1.5; 
     platform.receiveShadow = true;
@@ -84,15 +123,15 @@
 
     // Level data (larger scale)
     const LEVELS = [
-      { gems: 6, obstacles: 4, movObs: 2, scale: 12 },
-      { gems: 8, obstacles: 6, movObs: 4, scale: 15 },
-      { gems: 10, obstacles: 8, movObs: 5, scale: 18 },
-      { gems: 12, obstacles: 12, movObs: 6, scale: 20 },
-      { gems: 15, obstacles: 15, movObs: 8, scale: 20 }
+      { gems: 6, obstacles: 4, movObs: 2, hunters: 0, scale: 12 },
+      { gems: 8, obstacles: 6, movObs: 4, hunters: 1, scale: 15 },
+      { gems: 10, obstacles: 8, movObs: 5, hunters: 2, scale: 18 },
+      { gems: 12, obstacles: 12, movObs: 6, hunters: 2, scale: 20 },
+      { gems: 15, obstacles: 15, movObs: 8, hunters: 3, scale: 20 }
     ];
 
     let currentLevel = 0;
-    let gems = [], obstacles = [], movingObstacles = [], powerups = [], score = 0, win = false, totalScore = 0, lives = 3, timer = 0, paused = false, leaderboard = [];
+    let gems = [], obstacles = [], movingObstacles = [], powerups = [], hunters = [], score = 0, win = false, totalScore = 0, lives = 3, timer = 0, paused = false, leaderboard = [];
     let gemMagnet = false, slowMotion = false, skin = 0, shake = 0;
     const playerSkins = [0x00f5ff, 0xff0055, 0x00ff99, 0xffe100];
 
@@ -160,7 +199,8 @@
       obstacles.forEach(o=>scene.remove(o));
       movingObstacles.forEach(o=>scene.remove(o));
       powerups.forEach(p=>scene.remove(p));
-      gems = []; obstacles = []; movingObstacles = []; powerups = [];
+      hunters.forEach(h=>scene.remove(h));
+      gems = []; obstacles = []; movingObstacles = []; powerups = []; hunters = [];
       score = 0; win = false;
       
       velX = 0; velZ = 0; velY = 0;
@@ -211,6 +251,20 @@
         m.userData = {dir: Math.random()<0.5?'x':'z', phase: Math.random()*Math.PI*2, range: 3+Math.random()*4, center:{x:pos.x, z:pos.z}};
         m.castShadow = true; m.receiveShadow = true;
         scene.add(m); movingObstacles.push(m);
+      }
+
+      // Hunters (Chasing AI)
+      const hGeo = new THREE.ConeGeometry(0.4, 1.2, 4);
+      hGeo.rotateX(Math.PI/2); // Point forward
+      const hMat = new THREE.MeshPhysicalMaterial({color:0xff0000, emissive:0xff0000, emissiveIntensity:0.5, metalness:0.8, roughness:0.2});
+      for(let i=0;i<LEVELS[levelIdx].hunters;i++){
+        let tries=0, pos;
+        do { pos = {x:(Math.random()-0.5)*scale*1.8, z:(Math.random()-0.5)*scale*1.8}; tries++; } 
+        while((Math.hypot(pos.x, pos.z)<5) && tries<30); // Keep far from spawn
+        const h = new THREE.Mesh(hGeo, hMat.clone());
+        h.position.set(pos.x, 0.6, pos.z);
+        h.castShadow = true;
+        scene.add(h); hunters.push(h);
       }
 
       // Powerups
@@ -465,6 +519,33 @@
         });
       }
       
+      // Logic - Hunters Chasing AI
+      hunters.forEach(h => {
+        h.lookAt(playerGroup.position.x, playerGroup.position.y + 0.5, playerGroup.position.z);
+        h.translateZ( slowMotion ? 0.02 : 0.04 ); // Move forward toward look target
+        
+        // Damage Collision
+        if(Math.abs(playerGroup.position.x-h.position.x)<0.7 && Math.abs(playerGroup.position.z-h.position.z)<0.7 && playerGroup.position.y<1.2){
+          shake = 15; lives--; playSFX('sfx-lose');
+          
+          let dx = playerGroup.position.x - h.position.x;
+          let dz = playerGroup.position.z - h.position.z;
+          let dist = Math.hypot(dx, dz) || 1;
+          velX = (dx/dist) * 0.6;
+          velZ = (dz/dist) * 0.6;
+          velY = 0.2; // Heavy knockback
+          
+          // Reset Hunter position
+          h.position.x = (Math.random()-0.5) * 30;
+          h.position.z = (Math.random()-0.5) * 30;
+          
+          document.getElementById('lives-ui').textContent = 'Lives: '+lives;
+          if(lives<=0){
+            win=true; document.getElementById('game-ui').textContent='Game Over!'; stopMusic(); showLeaderboard(); setTimeout(()=>{document.getElementById('start-screen').style.display='flex'; started=false;},2000); return;
+          }
+        }
+      });
+
       let collected = 0;
       gems.forEach((g,i)=>{
         if(g.visible && Math.abs(playerGroup.position.x-g.position.x)<0.7 && Math.abs(playerGroup.position.z-g.position.z)<0.7 && playerGroup.position.y<1.2){
@@ -494,7 +575,7 @@
         showLevelComplete();
       }
       
-      renderer.render(scene,camera);
+      composer.render();
     }
     animateGame();
   </script>
