@@ -315,27 +315,29 @@ function initThreeHero() {
     const atmosMesh = new THREE.Mesh(atmosGeometry, atmosMaterial);
     earthGroup.add(atmosMesh);
 
-    // Cyberpunk Wireframe Sphere around it
-    const wireGeometry = new THREE.SphereGeometry(2.15, 32, 32);
-    const wireMaterial = new THREE.MeshBasicMaterial({
-        color: 0x7b2fff,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.15
-    });
-    const wireMesh = new THREE.Mesh(wireGeometry, wireMaterial);
-    earthGroup.add(wireMesh);
+    // Initial setup for interactions (OrbitControls)
+    let controls;
+    if (typeof THREE.OrbitControls !== 'undefined') {
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableZoom = false; // Disable zooming, keep it fixed size
+        controls.enablePan = false;  // Disable panning
+        controls.autoRotate = true;  // Keep rotating when not interacted with
+        controls.autoRotateSpeed = 0.5;
+        controls.enableDamping = true; // Smooth rotation
+        controls.dampingFactor = 0.05;
+    }
 
     // Animation Loop
     function animate() {
         requestAnimationFrame(animate);
 
-        // Rotation
-        earthGroup.rotation.y += 0.003;
-        earthGroup.rotation.x += 0.001;
-        
-        wireMesh.rotation.y -= 0.001;
-        wireMesh.rotation.z += 0.001;
+        // Regular continuous rotation if OrbitControls didn't load
+        if(!controls) {
+            earthGroup.rotation.y += 0.003;
+            earthGroup.rotation.x += 0.001;
+        } else {
+            controls.update(); // Update controls (handles autoRotate and damping)
+        }
 
         renderer.render(scene, camera);
     }
