@@ -260,7 +260,7 @@ function initThreeHero() {
     
     // Setup camera
     const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.z = 5;
+    camera.position.z = 5.5;
 
     // Setup renderer
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -268,40 +268,74 @@ function initThreeHero() {
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
 
-    // Create Geometry (Icosahedron)
-    const geometry = new THREE.IcosahedronGeometry(2, 0);
+    // Add Lights for the Earth
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
     
-    // Create Material (Wireframe glowing)
-    const material = new THREE.MeshBasicMaterial({ 
-        color: 0x00f5ff, 
-        wireframe: true,
-        transparent: true,
-        opacity: 0.8
+    const pointLight = new THREE.PointLight(0x00f5ff, 2, 50); // Cyan light
+    pointLight.position.set(5, 3, 5);
+    scene.add(pointLight);
+
+    const pointLight2 = new THREE.PointLight(0x7b2fff, 2, 50); // Purple light
+    pointLight2.position.set(-5, -3, -5);
+    scene.add(pointLight2);
+
+    // Earth Group
+    const earthGroup = new THREE.Group();
+    scene.add(earthGroup);
+
+    // Load Textures
+    const textureLoader = new THREE.TextureLoader();
+    // Using a reliable CDN for Earth texture
+    const earthMap = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg');
+
+    // Create Earth Geometry
+    const geometry = new THREE.SphereGeometry(2, 64, 64);
+    
+    // Create Material (Cyberpunk tinted Earth)
+    const material = new THREE.MeshStandardMaterial({ 
+        map: earthMap,
+        color: 0xaaaaaa, // Slightly darken base to let lights show
+        roughness: 0.6,
+        metalness: 0.1,
     });
 
-    const mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
+    const earthMesh = new THREE.Mesh(geometry, material);
+    earthGroup.add(earthMesh);
     
-    // Create inner solid Core
-    const innerGeometry = new THREE.IcosahedronGeometry(1.5, 0);
-    const innerMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0x7b2fff,
+    // Create Atmosphere Glow
+    const atmosGeometry = new THREE.SphereGeometry(2.1, 32, 32);
+    const atmosMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0x00f5ff,
         transparent: true,
-        opacity: 0.3
+        opacity: 0.15,
+        side: THREE.BackSide,
+        blending: THREE.AdditiveBlending
     });
-    const innerMesh = new THREE.Mesh(innerGeometry, innerMaterial);
-    scene.add(innerMesh);
+    const atmosMesh = new THREE.Mesh(atmosGeometry, atmosMaterial);
+    earthGroup.add(atmosMesh);
+
+    // Cyberpunk Wireframe Sphere around it
+    const wireGeometry = new THREE.SphereGeometry(2.15, 32, 32);
+    const wireMaterial = new THREE.MeshBasicMaterial({
+        color: 0x7b2fff,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.15
+    });
+    const wireMesh = new THREE.Mesh(wireGeometry, wireMaterial);
+    earthGroup.add(wireMesh);
 
     // Animation Loop
     function animate() {
         requestAnimationFrame(animate);
 
         // Rotation
-        mesh.rotation.x += 0.005;
-        mesh.rotation.y += 0.005;
+        earthGroup.rotation.y += 0.003;
+        earthGroup.rotation.x += 0.001;
         
-        innerMesh.rotation.x -= 0.003;
-        innerMesh.rotation.y -= 0.003;
+        wireMesh.rotation.y -= 0.001;
+        wireMesh.rotation.z += 0.001;
 
         renderer.render(scene, camera);
     }
