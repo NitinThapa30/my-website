@@ -269,15 +269,22 @@ function initThreeHero() {
     container.appendChild(renderer.domElement);
 
     // Add Lights for the Earth
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2); // Increased ambient light significantly
     scene.add(ambientLight);
     
-    const pointLight = new THREE.PointLight(0x00f5ff, 2, 50); // Cyan light
-    pointLight.position.set(5, 3, 5);
+    // Key light (strong main light)
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    directionalLight.position.set(5, 3, 5);
+    scene.add(directionalLight);
+
+    // Accent light cyan
+    const pointLight = new THREE.PointLight(0x00f5ff, 3, 50); 
+    pointLight.position.set(-5, 5, 5);
     scene.add(pointLight);
 
-    const pointLight2 = new THREE.PointLight(0x7b2fff, 2, 50); // Purple light
-    pointLight2.position.set(-5, -3, -5);
+    // Accent light purple
+    const pointLight2 = new THREE.PointLight(0x7b2fff, 3, 50); 
+    pointLight2.position.set(5, -5, -5);
     scene.add(pointLight2);
 
     // Earth Group
@@ -295,8 +302,8 @@ function initThreeHero() {
     // Create Material (Cyberpunk tinted Earth)
     const material = new THREE.MeshStandardMaterial({ 
         map: earthMap,
-        color: 0xaaaaaa, // Slightly darken base to let lights show
-        roughness: 0.6,
+        color: 0xffffff, // Set back to pure white to let the texture shine brightly
+        roughness: 0.4,  // Slightly shinier
         metalness: 0.1,
     });
 
