@@ -482,8 +482,8 @@ a:hover ~ .cursor-outline, button:hover ~ .cursor-outline, .project-card-3d:hove
     transform: translate(-50%, -50%);
     width: 150%;
     height: 150%;
-    z-index: 1;
-    pointer-events: none;
+    z-index: 10;
+    pointer-events: auto; /* Changed to auto so we can interact with Earth */
 }
 
 .profile-image-wrapper {
