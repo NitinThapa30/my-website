@@ -866,8 +866,9 @@ function initCyberneticGridShader() {
     const onResize = () => {
         const width  = container.clientWidth;
         const height = container.clientHeight;
+        const dpr = window.devicePixelRatio || 1;
         renderer.setSize(width, height);
-        uniforms.iResolution.value.set(width, height);
+        uniforms.iResolution.value.set(width * dpr, height * dpr);
     };
     window.addEventListener('resize', onResize);
     onResize(); // set initial size
@@ -875,6 +876,7 @@ function initCyberneticGridShader() {
     // 5) Mouse handler
     const onMouseMove = (e) => {
         const rect = container.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
         // Calculate mouse position relative to the container
         let x = e.clientX - rect.left;
         let y = e.clientY - rect.top;
@@ -883,10 +885,10 @@ function initCyberneticGridShader() {
         x = Math.max(0, Math.min(x, container.clientWidth));
         y = Math.max(0, Math.min(y, container.clientHeight));
         
-        // Shader expects origin at bottom-left
+        // Shader expects origin at bottom-left in physical pixels
         uniforms.iMouse.value.set(
-            x,
-            container.clientHeight - y
+            x * dpr,
+            (container.clientHeight - y) * dpr
         );
     };
     window.addEventListener('mousemove', onMouseMove);
