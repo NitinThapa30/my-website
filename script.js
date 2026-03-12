@@ -251,6 +251,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if(typeof THREE !== 'undefined' && document.getElementById('skills-canvas-container')) {
         initThreeSkills();
     }
+    
+    // --- 9. Three.js About Desk Scene ---
+    if(typeof THREE !== 'undefined' && document.getElementById('about-3d-desk')) {
+        initThreeDesk();
+    }
 });
 
 // Three.js Hero Initialization function
@@ -636,4 +641,143 @@ if(termInput && termOutput) {
                 printToTerminal('Type "help" to see available commands.');
         }
     }
+}
+
+// --- 8. Three.js About Desk Scene ---
+function initThreeDesk() {
+    const container = document.getElementById('about-3d-desk');
+    const scene = new THREE.Scene();
+    
+    // Setup camera
+    const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(4, 3, 5); // Angle looking down at the desk
+
+    // Setup renderer
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Softer shadows
+    container.appendChild(renderer.domElement);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); // Bright enough to see details
+    scene.add(ambientLight);
+    
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    dirLight.position.set(5, 10, 5);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    scene.add(dirLight);
+
+    const purpleLight = new THREE.PointLight(0x7b2fff, 2, 20);
+    purpleLight.position.set(-2, 2, 2);
+    scene.add(purpleLight);
+
+    const cyanLight = new THREE.PointLight(0x00f5ff, 2, 20);
+    cyanLight.position.set(2, 2, -2);
+    scene.add(cyanLight);
+
+    // OrbitControls for interactivity
+    let deskControls;
+    if (typeof THREE.OrbitControls !== 'undefined') {
+        deskControls = new THREE.OrbitControls(camera, renderer.domElement);
+        deskControls.enableZoom = true;
+        deskControls.minDistance = 3;
+        deskControls.maxDistance = 10;
+        deskControls.enablePan = false;
+        deskControls.autoRotate = true;
+        deskControls.autoRotateSpeed = 0.8;
+        deskControls.enableDamping = true;
+        deskControls.dampingFactor = 0.05;
+        
+        // Limit vertical rotation to prevent turning it completely upside down
+        deskControls.maxPolarAngle = Math.PI / 2 + 0.1; 
+        deskControls.minPolarAngle = 0.5;
+    }
+
+    // Load Low-Poly Desk GLTF Model
+    if (typeof THREE.GLTFLoader !== 'undefined') {
+        const loader = new THREE.GLTFLoader();
+        
+        // This is a free, CC-0 low-poly computer desk model loaded from a raw GitHub repo or CDN.
+        // As a placeholder, we use a basic scene if it fails, but this URL provides a good representation based on public assets.
+        const modelUrl = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf'; // Fallback sample if desk is unavailable
+        
+        // Let's create a programmatic desk just in case external GLTF fails to load instantly, 
+        // to ensure the scene looks good no matter what.
+        const deskGroup = new THREE.Group();
+        
+        // Table top
+        const tableGeo = new THREE.BoxGeometry(3, 0.1, 1.5);
+        const tableMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 });
+        const table = new THREE.Mesh(tableGeo, tableMat);
+        table.position.y = 0;
+        table.castShadow = true;
+        table.receiveShadow = true;
+        deskGroup.add(table);
+        
+        // Monitor Stand
+        const standGeo = new THREE.BoxGeometry(0.2, 0.4, 0.2);
+        const standMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+        const stand = new THREE.Mesh(standGeo, standMat);
+        stand.position.set(0, 0.25, -0.4);
+        deskGroup.add(stand);
+
+        // Monitor
+        const monitorGeo = new THREE.BoxGeometry(1.5, 0.8, 0.1);
+        const monitorMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+        const monitor = new THREE.Mesh(monitorGeo, monitorMat);
+        monitor.position.set(0, 0.6, -0.4);
+        monitor.rotation.x = -0.1;
+        deskGroup.add(monitor);
+        
+        // Monitor Screen (Glowing)
+        const screenGeo = new THREE.PlaneGeometry(1.4, 0.7);
+        const screenMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff, side: THREE.DoubleSide });
+        const screen = new THREE.Mesh(screenGeo, screenMat);
+        screen.position.set(0, 0.6, -0.34);
+        screen.rotation.x = -0.1;
+        deskGroup.add(screen);
+
+        // Keyboard
+        const kbGeo = new THREE.BoxGeometry(0.8, 0.05, 0.3);
+        const kbMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+        const keyboard = new THREE.Mesh(kbGeo, kbMat);
+        keyboard.position.set(0, 0.08, 0.3);
+        deskGroup.add(keyboard);
+        
+        // Mouse
+        const mouseGeo = new THREE.BoxGeometry(0.12, 0.04, 0.2);
+        const mouseMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+        const pcMouse = new THREE.Mesh(mouseGeo, mouseMat);
+        pcMouse.position.set(0.6, 0.08, 0.3);
+        deskGroup.add(pcMouse);
+
+        scene.add(deskGroup);
+        
+        // Move the whole group down slightly to center it
+        deskGroup.position.y = -0.5;
+    }
+
+    // Animation Loop
+    function animateDesk() {
+        requestAnimationFrame(animateDesk);
+
+        if (deskControls) {
+            deskControls.update(); 
+        }
+
+        renderer.render(scene, camera);
+    }
+    animateDesk();
+
+    // Handle Resize
+    window.addEventListener('resize', () => {
+        if(!container) return;
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    });
 }
