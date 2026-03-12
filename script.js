@@ -227,9 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 7. Three.js Hero Custom Mesh (Rotating Icosahedron) ---
-    if(typeof THREE !== 'undefined' && document.getElementById('three-hero-container')) {
-        initThreeHero();
+    // --- 7. D3.js Hero Custom Mesh (Halftone Earth) ---
+    if(typeof d3 !== 'undefined' && document.getElementById('three-hero-container')) {
+        initD3Earth();
     }
     
     // --- 8. Three.js Skills Orbiting Spheres ---
@@ -764,6 +764,280 @@ function initThreeDesk() {
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+}
+
+// --- D3.js Hero Earth (Halftone / Point Map) ---
+function initD3Earth() {
+    const container = document.getElementById('three-hero-container');
+    if (!container) return;
+    
+    // Clear out any existing canvases (like old Three.js content)
+    container.innerHTML = '';
+    
+    // Create new Canvas
+    const canvas = document.createElement('canvas');
+    canvas.className = "w-full h-auto rounded-2xl bg-background dark";
+    canvas.style.maxWidth = "100%";
+    canvas.style.height = "auto";
+    // Ensure canvas stays behind the interactive parts if needed, or matches layout
+    canvas.style.position = "relative";
+    canvas.style.zIndex = "10";
+    container.appendChild(canvas);
+
+    const context = canvas.getContext("2d");
+    if (!context) return;
+    
+    // Interaction hints removed per user request
+
+    // Initial sizing
+    let width = container.clientWidth || 400;
+    let height = container.clientHeight || 400;
+    
+    // For smaller screens, don't let it overflow
+    let containerWidth = width;
+    let containerHeight = height;
+    let radius = Math.min(containerWidth, containerHeight) / 2.5;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = containerWidth * dpr;
+    canvas.height = containerHeight * dpr;
+    canvas.style.width = `${containerWidth}px`;
+    canvas.style.height = `${containerHeight}px`;
+    context.scale(dpr, dpr);
+
+    const projection = d3.geoOrthographic()
+      .scale(radius)
+      // Shifted down slightly per user request
+      .translate([containerWidth / 2, containerHeight / 2 + 60])
+      .clipAngle(90);
+
+    const path = d3.geoPath().projection(projection).context(context);
+
+    // D3 variables
+    let isLoading = true;
+    let landFeatures;
+    const allDots = [];
+
+    const pointInPolygon = (point, polygon) => {
+      const [x, y] = point;
+      let inside = false;
+      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const [xi, yi] = polygon[i];
+        const [xj, yj] = polygon[j];
+        if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+          inside = !inside;
+        }
+      }
+      return inside;
+    };
+
+    const pointInFeature = (point, feature) => {
+      const geometry = feature.geometry;
+      if (geometry.type === "Polygon") {
+        const coordinates = geometry.coordinates;
+        if (!pointInPolygon(point, coordinates[0])) return false;
+        for (let i = 1; i < coordinates.length; i++) {
+          if (pointInPolygon(point, coordinates[i])) return false;
+        }
+        return true;
+      } else if (geometry.type === "MultiPolygon") {
+        for (const polygon of geometry.coordinates) {
+          if (pointInPolygon(point, polygon[0])) {
+            let inHole = false;
+            for (let i = 1; i < polygon.length; i++) {
+              if (pointInPolygon(point, polygon[i])) {
+                inHole = true; break;
+              }
+            }
+            if (!inHole) return true;
+          }
+        }
+        return false;
+      }
+      return false;
+    };
+
+    const generateDotsInPolygon = (feature, dotSpacing = 16) => {
+      const dots = [];
+      const bounds = d3.geoBounds(feature);
+      const [[minLng, minLat], [maxLng, maxLat]] = bounds;
+      
+      const stepSize = dotSpacing * 0.08;
+      for (let lng = minLng; lng <= maxLng; lng += stepSize) {
+        for (let lat = minLat; lat <= maxLat; lat += stepSize) {
+          const point = [lng, lat];
+          if (pointInFeature(point, feature)) {
+            dots.push(point);
+          }
+        }
+      }
+      return dots;
+    };
+
+    const render = () => {
+      context.clearRect(0, 0, containerWidth, containerHeight);
+      
+      const currentScale = projection.scale();
+      const scaleFactor = currentScale / radius;
+
+      // Draw ocean (globe background loop)
+      context.beginPath();
+      // Shift render center as well
+      context.arc(containerWidth / 2, containerHeight / 2 + 60, currentScale, 0, 2 * Math.PI);
+      
+      // Cyberpunk deep space/ocean gradient - changed to deep blue
+      const grd = context.createRadialGradient(
+          containerWidth / 2 - currentScale * 0.3, 
+          containerHeight / 2 + 60 - currentScale * 0.3, 
+          0, 
+          containerWidth / 2, 
+          containerHeight / 2 + 60, 
+          currentScale
+      );
+      grd.addColorStop(0, "rgba(0, 80, 255, 0.4)"); // Inner blue glow 
+      grd.addColorStop(1, "rgba(2, 5, 20, 0.9)");       // Outer space dark blue
+      
+      context.fillStyle = grd;
+      context.fill();
+      context.strokeStyle = "rgba(0, 150, 255, 0.5)"; // Blue outline
+      context.lineWidth = 1 * scaleFactor;
+      context.stroke();
+
+      if (landFeatures) {
+        // Draw graticule
+        const graticule = d3.geoGraticule();
+        context.beginPath();
+        path(graticule());
+        context.strokeStyle = "rgba(0, 150, 255, 0.2)"; // Soft blue wireframe
+        context.lineWidth = 0.5 * scaleFactor;
+        context.stroke();
+
+        // Draw land outlines
+        context.beginPath();
+        landFeatures.features.forEach((feature) => {
+          path(feature);
+        });
+        context.strokeStyle = "rgba(0, 200, 255, 0.6)"; // Bright blue land masses
+        context.lineWidth = 1 * scaleFactor;
+        context.stroke();
+
+        // Draw halftone dots
+        allDots.forEach((dot) => {
+          const projected = projection([dot.lng, dot.lat]);
+          if (
+            projected &&
+            projected[0] >= 0 &&
+            projected[0] <= containerWidth &&
+            projected[1] >= 0 &&
+            projected[1] <= containerHeight + 100 // generous bounds since we moved it down
+          ) {
+            context.beginPath();
+            context.arc(projected[0], projected[1], 1.2 * scaleFactor, 0, 2 * Math.PI);
+            context.fillStyle = "rgba(100, 150, 255, 0.9)"; // Light blue dots
+            context.fill();
+          }
+        });
+      }
+    };
+
+    const loadWorldData = async () => {
+      try {
+        const response = await fetch(
+          "https://raw.githubusercontent.com/martynafford/natural-earth-geojson/refs/heads/master/110m/physical/ne_110m_land.json"
+        );
+        if (!response.ok) throw new Error("Failed to load land data");
+        landFeatures = await response.json();
+
+        // Generate dots for all land features
+        landFeatures.features.forEach((feature) => {
+          const dots = generateDotsInPolygon(feature, 16);
+          dots.forEach(([lng, lat]) => {
+            allDots.push({ lng, lat, visible: true });
+          });
+        });
+
+        render();
+        isLoading = false;
+      } catch (err) {
+        console.error("Failed to load D3 land map data", err);
+      }
+    };
+
+    const rotation = [0, 0];
+    let autoRotate = true;
+    const rotationSpeed = 0.5;
+
+    const rotate = () => {
+      if (autoRotate) {
+        rotation[0] += rotationSpeed;
+        projection.rotate(rotation);
+        render();
+      }
+    };
+
+    // Interactive listeners restored per user request
+    const rotationTimer = d3.timer(rotate);
+
+    let isDragging = false;
+    let startX, startY;
+    let startRotation;
+
+    const handleMouseDown = (event) => {
+      // Allow pointer events passthrough handling
+      autoRotate = false;
+      isDragging = true;
+      startX = event.clientX;
+      startY = event.clientY;
+      startRotation = [...rotation];
+    };
+
+    const handleMouseMove = (event) => {
+      if (!isDragging) return;
+      
+      const sensitivity = 0.5;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+
+      rotation[0] = startRotation[0] + dx * sensitivity;
+      rotation[1] = startRotation[1] - dy * sensitivity;
+      rotation[1] = Math.max(-90, Math.min(90, rotation[1]));
+
+      projection.rotate(rotation);
+      render();
+    };
+
+    const handleMouseUp = () => {
+      if(isDragging) {
+        isDragging = false;
+        setTimeout(() => {
+          autoRotate = true;
+        }, 100);
+      }
+    };
+
+    canvas.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    loadWorldData();
+
+    // Resize handling
+    window.addEventListener('resize', () => {
+        containerWidth = container.clientWidth;
+        containerHeight = container.clientHeight;
+        radius = Math.min(containerWidth, containerHeight) / 2.5;
+
+        canvas.width = containerWidth * dpr;
+        canvas.height = containerHeight * dpr;
+        canvas.style.width = `${containerWidth}px`;
+        canvas.style.height = `${containerHeight}px`;
+        context.scale(dpr, dpr);
+        
+        projection.translate([containerWidth / 2, containerHeight / 2 + 60]);
+        if(!isDragging && !autoRotate) {
+            render();
+        }
     });
 }
 
