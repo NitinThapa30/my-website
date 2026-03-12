@@ -291,7 +291,7 @@ a:hover ~ .cursor-outline, button:hover ~ .cursor-outline, .project-card-3d:hove
     overflow: hidden;
 }
 
-/* Vanta Background */
+/* Shader Background */
 #vanta-bg {
     position: absolute;
     top: 0;
@@ -299,7 +299,13 @@ a:hover ~ .cursor-outline, button:hover ~ .cursor-outline, .project-card-3d:hove
     width: 100%;
     height: 100%;
     z-index: 0;
-    pointer-events: none;
+    pointer-events: none; /* Let clicks pass through to content */
+    background: transparent;
+}
+
+#vanta-bg canvas {
+    width: 100% !important;
+    height: 100% !important;
 }
 
 /* Hero Section */
