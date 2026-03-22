@@ -1448,3 +1448,274 @@ a:hover ~ .cursor-outline, button:hover ~ .cursor-outline, .project-card-3d:hove
 .tracking-tighter {
     letter-spacing: 0.05em;
 }
+
+/* --- 12. Radial Orbital Timeline (Technical Arsenal) --- */
+.orbital-timeline-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1000px;
+}
+
+/* Center Core */
+.orbital-center {
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), #3b82f6, var(--cyan));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    animation: orbital-pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.orbital-center-ping1, .orbital-center-ping2 {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: orbital-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.orbital-center-ping1 {
+    width: 80px; height: 80px; opacity: 0.7;
+}
+.orbital-center-ping2 {
+    width: 96px; height: 96px; opacity: 0.5; animation-delay: 0.5s;
+}
+
+.orbital-center-core {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+}
+
+.orbital-ring {
+    position: absolute;
+    width: 384px;
+    height: 384px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Orbiting Nodes */
+.orbit-node {
+    position: absolute;
+    transition: all 0.7s ease;
+    cursor: pointer;
+}
+
+.orbit-node-bg-pulse {
+    position: absolute;
+    border-radius: 50%;
+    inset: -4px;
+}
+
+.orbit-node-icon-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255,255,255,0.4);
+    background: rgba(0,0,0,1);
+    color: white;
+    transition: all 0.3s;
+}
+
+.orbit-node-expanded .orbit-node-icon-container {
+    background: white;
+    color: black;
+    border-color: white;
+    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+    transform: scale(1.5);
+}
+
+.orbit-node-related .orbit-node-icon-container {
+    background: rgba(255,255,255,0.5);
+    color: black;
+    border-color: white;
+    animation: orbital-pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.orbit-node-title {
+    position: absolute;
+    top: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    transition: all 0.3s;
+    color: rgba(255,255,255,0.7);
+}
+
+.orbit-node-expanded .orbit-node-title {
+    color: white;
+    transform: translateX(-50%) scale(1.25);
+    top: 55px;
+}
+
+/* Orbit Node Expanding Card (Details) */
+.orbit-card {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 256px;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,245,255,0.1);
+    z-index: 300;
+    cursor: default;
+    /* Custom connection line to node */
+    border-top: 1px solid var(--glass-border);
+}
+
+.orbit-card::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.orbit-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.orbit-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid white;
+    font-weight: bold;
+}
+
+.orbit-badge-completed {
+    background: var(--cyan);
+    color: black;
+    border-color: var(--cyan);
+}
+.orbit-badge-inprogress {
+    background: white;
+    color: black;
+}
+.orbit-badge-pending {
+    background: rgba(0,0,0,0.4);
+    color: white;
+    border-color: rgba(255,255,255,0.5);
+}
+
+.orbit-card-date {
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    color: rgba(255,255,255,0.5);
+}
+
+.orbit-card-title {
+    font-size: 0.875rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-heading);
+}
+
+.orbit-card-content {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 1rem;
+}
+
+.orbit-energy-section {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.orbit-energy-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    margin-bottom: 4px;
+}
+
+.orbit-energy-bar-bg {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.orbit-energy-bar-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--purple), var(--cyan));
+}
+
+.orbit-connections-section {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 0.75rem;
+}
+
+.orbit-connections-title {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 0.5rem;
+}
+
+.orbit-related-link {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 8px;
+    font-size: 0.7rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: transparent;
+    color: rgba(255,255,255,0.8);
+    margin-right: 4px;
+    margin-bottom: 4px;
+    transition: all 0.2s;
+}
+
+.orbit-related-link:hover {
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+
+.orbit-related-link i {
+    font-size: 0.5rem;
+    margin-left: 4px;
+    opacity: 0.6;
+}
+
+/* Animations translated from Tailwind */
+@keyframes orbital-pulse-glow {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes orbital-ping {
+    75%, 100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}

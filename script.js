@@ -232,9 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
         initD3Earth();
     }
     
-    // --- 8. Three.js Skills Orbiting Spheres ---
-    if(typeof THREE !== 'undefined' && document.getElementById('skills-canvas-container')) {
-        initThreeSkills();
+    // --- 8. Custom Radial Orbital Timeline (Technical Arsenal) ---
+    if(document.getElementById('orbital-timeline-root')) {
+        initOrbitalSkills();
     }
     
     // --- 9. Three.js About Desk Scene ---
@@ -1171,5 +1171,247 @@ function initCyberneticGridShader() {
     renderer.setAnimationLoop(() => {
         uniforms.iTime.value = clock.getElapsedTime();
         renderer.render(scene, camera);
+    });
+}
+
+// --- 11. Custom Radial Orbital Timeline (Technical Arsenal) ---
+function initOrbitalSkills() {
+    const root = document.getElementById('orbital-timeline-root');
+    if(!root) return;
+
+    // Data Structure mapped to the user's skills
+    const timelineData = [
+        { id: 1, title: 'Python', date: 'Core Language', content: 'Extensive experience in data processing, backend logic, and AI prototyping.', category: 'Programming', icon: 'fab fa-python', relatedIds: [5, 6], status: 'completed', energy: 90 },
+        { id: 2, title: 'C++', date: 'Core Language', content: 'High-performance computing and game engine development.', category: 'Programming', icon: 'fas fa-code', relatedIds: [3], status: 'completed', energy: 85 },
+        { id: 3, title: 'Unreal Engine 5', date: 'Game Dev', content: 'Building immersive 3D environments and complex gameplay mechanics.', category: 'Game Dev', icon: 'fas fa-gamepad', relatedIds: [2, 4], status: 'in-progress', energy: 80 },
+        { id: 4, title: 'Blender', date: '3D Modeling', content: 'Creating optimized 3D assets for real-time rendering in games.', category: 'Game Dev', icon: 'fas fa-cube', relatedIds: [3], status: 'completed', energy: 75 },
+        { id: 5, title: 'Mistral-7B', date: 'AI / LLMs', content: 'Fine-tuning and deploying large language models for natural interactions.', category: 'AI', icon: 'fas fa-brain', relatedIds: [1], status: 'in-progress', energy: 85 },
+        { id: 6, title: 'Computer Vision', date: 'AI / CV', content: 'Object detection and Optical Character Recognition (OCR) systems.', category: 'AI', icon: 'fas fa-eye', relatedIds: [1], status: 'completed', energy: 80 },
+        { id: 7, title: 'HTML/CSS/JS', date: 'Web Dev', content: 'Building responsive, interactive frontend web experiences.', category: 'WebTools', icon: 'fab fa-js', relatedIds: [], status: 'completed', energy: 90 },
+        { id: 8, title: 'Docker', date: 'DevOps', content: 'Containerizing applications for consistent deployment schemas.', category: 'WebTools', icon: 'fab fa-docker', relatedIds: [], status: 'pending', energy: 70 }
+    ];
+
+    let expandedItems = {};
+    let rotationAngle = 0;
+    let autoRotate = true;
+    let pulseEffect = {};
+    let activeNodeId = null;
+    let animationFrameId;
+
+    root.innerHTML = '';
+    
+    const innerContainer = document.createElement('div');
+    innerContainer.className = 'orbital-timeline-inner';
+    
+    // Abstract base layout click listener
+    root.addEventListener('click', (e) => {
+        if(e.target === root || e.target === innerContainer) {
+            expandedItems = {};
+            activeNodeId = null;
+            pulseEffect = {};
+            autoRotate = true;
+            renderNodes();
+        }
+    });
+
+    const corePulsingGroup = document.createElement('div');
+    corePulsingGroup.className = 'orbital-center';
+    corePulsingGroup.innerHTML = `
+        <div class="orbital-center-ping1"></div><div class="orbital-center-ping2"></div><div class="orbital-center-core"></div>
+    `;
+
+    const ring = document.createElement('div');
+    ring.className = 'orbital-ring';
+    
+    innerContainer.appendChild(corePulsingGroup);
+    innerContainer.appendChild(ring);
+    root.appendChild(innerContainer);
+
+    const nodeElements = [];
+
+    // Helper Functions
+    const getRelatedItems = (itemId) => {
+        const currentItem = timelineData.find((item) => item.id === itemId);
+        return currentItem ? currentItem.relatedIds : [];
+    };
+
+    const isRelatedToActive = (itemId) => {
+        if (!activeNodeId) return false;
+        return getRelatedItems(activeNodeId).includes(itemId);
+    };
+
+    const centerViewOnNode = (nodeId) => {
+        const nodeIndex = timelineData.findIndex((item) => item.id === nodeId);
+        if(nodeIndex === -1) return;
+        const totalNodes = timelineData.length;
+        const targetAngle = (nodeIndex / totalNodes) * 360;
+        rotationAngle = 270 - targetAngle; // Set rotation so node is at front-bottom
+    };
+
+    const toggleItem = (id) => {
+        // Reset others
+        Object.keys(expandedItems).forEach(key => {
+            if(parseInt(key) !== id) expandedItems[parseInt(key)] = false;
+        });
+        
+        expandedItems[id] = !expandedItems[id];
+
+        if (expandedItems[id]) {
+            activeNodeId = id;
+            autoRotate = false;
+            pulseEffect = {};
+            getRelatedItems(id).forEach(relId => { pulseEffect[relId] = true; });
+            centerViewOnNode(id);
+        } else {
+            activeNodeId = null;
+            autoRotate = true;
+            pulseEffect = {};
+        }
+        renderNodes();
+    };
+
+    // Render logic called on tick and on click
+    const renderNodes = () => {
+        const total = timelineData.length;
+        // Determine radius size based on container width acting responsively
+        let radius = Math.min(250, root.clientWidth / 2 - 100);
+        if(radius < 120) radius = 120;
+        
+        // Update the rings width dynamically
+        ring.style.width = `${radius * 2}px`;
+        ring.style.height = `${radius * 2}px`;
+
+        timelineData.forEach((item, index) => {
+            const angle = ((index / total) * 360 + rotationAngle) % 360;
+            const radian = (angle * Math.PI) / 180;
+
+            const x = radius * Math.cos(radian);
+            const y = radius * Math.sin(radian);
+            const zIndex = Math.round(100 + 50 * Math.cos(radian));
+            const baseOpacity = Math.max(0.4, Math.min(1, 0.4 + 0.6 * ((1 + Math.sin(radian)) / 2)));
+
+            const isExpanded = !!expandedItems[item.id];
+            const isRelated = isRelatedToActive(item.id);
+            const isPulsing = !!pulseEffect[item.id];
+            
+            const nodeEl = nodeElements[index];
+            
+            nodeEl.style.transform = `translate(${x}px, ${y}px)`;
+            nodeEl.style.zIndex = isExpanded ? 400 : zIndex;
+            nodeEl.style.opacity = isExpanded ? 1 : baseOpacity;
+
+            // Handle Classes based on State
+            if(isExpanded) nodeEl.classList.add('orbit-node-expanded');
+            else nodeEl.classList.remove('orbit-node-expanded');
+
+            if(isRelated && !isExpanded) nodeEl.classList.add('orbit-node-related');
+            else nodeEl.classList.remove('orbit-node-related');
+
+            // Handle Pulse BG
+            const pulseBg = nodeEl.querySelector('.orbit-node-bg-pulse');
+            if(isPulsing && !isExpanded) {
+                pulseBg.style.boxShadow = '0 0 20px 10px rgba(0,245,255,0.4)';
+                pulseBg.style.animation = 'orbital-pulse-glow 1s infinite alternate';
+            } else {
+                pulseBg.style.boxShadow = 'none';
+                pulseBg.style.animation = 'none';
+            }
+
+            // Handle Card visibility
+            const cardEl = nodeEl.querySelector('.orbit-card');
+            cardEl.style.display = isExpanded ? 'block' : 'none';
+        });
+    };
+
+    // Initial Node Creation
+    timelineData.forEach((item, index) => {
+        const nodeEl = document.createElement('div');
+        nodeEl.className = 'orbit-node';
+        
+        // Pulse Bg
+        const pulseBg = document.createElement('div');
+        pulseBg.className = 'orbit-node-bg-pulse';
+        
+        // Icon Container
+        const iconContainer = document.createElement('div');
+        iconContainer.className = 'orbit-node-icon-container';
+        iconContainer.innerHTML = `<i class="${item.icon}"></i>`;
+
+        // Title
+        const titleEl = document.createElement('div');
+        titleEl.className = 'orbit-node-title';
+        titleEl.textContent = item.title;
+
+        // Expanded details card
+        const cardEl = document.createElement('div');
+        cardEl.className = 'orbit-card glass-panel';
+        
+        let badgeClass = 'orbit-badge-pending';
+        let badgeText = 'PENDING';
+        if(item.status === 'completed') { badgeClass = 'orbit-badge-completed'; badgeText = 'COMPLETED'; }
+        if(item.status === 'in-progress') { badgeClass = 'orbit-badge-inprogress'; badgeText = 'IN PROGRESS'; }
+
+        // Links
+        let relatedHtml = '';
+        if(item.relatedIds.length > 0) {
+            let linksHtml = item.relatedIds.map(rid => {
+                const rt = timelineData.find(t => t.id === rid);
+                return rt ? `<button class="orbit-related-link" data-id="${rid}">${rt.title} <i class="fas fa-arrow-right"></i></button>` : '';
+            }).join('');
+            relatedHtml = `<div class="orbit-connections-section"><div class="orbit-connections-title"><i class="fas fa-link"></i> Connected Nodes</div>${linksHtml}</div>`;
+        }
+
+        cardEl.innerHTML = `
+            <div class="orbit-card-header">
+                <span class="orbit-badge ${badgeClass}">${badgeText}</span>
+                <span class="orbit-card-date">${item.date}</span>
+            </div>
+            <div class="orbit-card-title">${item.title}</div>
+            <div class="orbit-card-content">${item.content}</div>
+            <div class="orbit-energy-section">
+                <div class="orbit-energy-header"><span><i class="fas fa-bolt" style="color:#00f5ff; margin-right:4px;"></i> Energy Level</span><span>${item.energy}%</span></div>
+                <div class="orbit-energy-bar-bg"><div class="orbit-energy-bar-fill" style="width: ${item.energy}%;"></div></div>
+            </div>
+            ${relatedHtml}
+        `;
+
+        nodeEl.appendChild(pulseBg);
+        nodeEl.appendChild(iconContainer);
+        nodeEl.appendChild(titleEl);
+        nodeEl.appendChild(cardEl);
+        
+        // Node Click binding
+        nodeEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleItem(item.id);
+        });
+
+        innerContainer.appendChild(nodeEl);
+        nodeElements.push(nodeEl);
+    });
+
+    // Delegated click for related buttons
+    innerContainer.addEventListener('click', (e) => {
+        const linkBtn = e.target.closest('.orbit-related-link');
+        if(linkBtn) {
+            e.stopPropagation();
+            toggleItem(parseInt(linkBtn.dataset.id));
+        }
+    });
+
+    // Animation Tick
+    const tick = () => {
+        if (autoRotate) {
+             rotationAngle = (rotationAngle + 0.15) % 360;
+             renderNodes();
+        }
+        animationFrameId = requestAnimationFrame(tick);
+    };
+
+    tick();
+    
+    // Handle Window Resize properly
+    window.addEventListener('resize', () => {
+        if(root) renderNodes();
     });
 }
