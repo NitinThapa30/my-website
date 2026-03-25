@@ -1415,3 +1415,79 @@ function initOrbitalSkills() {
         if(root) renderNodes();
     });
 }
+
+// --- 13. Flickering Grid Footer Animation ---
+function initFlickerGrid() {
+    const canvas = document.getElementById('flicker-grid-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const container = canvas.parentElement;
+
+    const squareSize = 3;
+    const gridGap = 3;
+    const maxOpacity = 0.7;
+    const flickerChance = 0.1;
+    // We use the new design system primary color rgb: 18, 117, 226
+    const baseColor = 'rgba(18, 117, 226, ';
+
+    let cols, rows, squares, dpr;
+    let animationFrameId;
+    let lastTime = 0;
+
+    const resizeCanvas = () => {
+        dpr = window.devicePixelRatio || 1;
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        
+        cols = Math.ceil(width / (squareSize + gridGap));
+        rows = Math.ceil(height / (squareSize + gridGap));
+        
+        squares = new Float32Array(cols * rows);
+        for (let i = 0; i < squares.length; i++) {
+            squares[i] = Math.random() * maxOpacity;
+        }
+    };
+
+    const drawGrid = (deltaTime) => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        for (let i = 0; i < cols; i++) {
+            for (let j = 0; j < rows; j++) {
+                const index = i * rows + j;
+                
+                // Flicker logic
+                if (Math.random() < flickerChance * deltaTime) {
+                    squares[index] = Math.random() * maxOpacity;
+                }
+                
+                const x = i * (squareSize + gridGap) * dpr;
+                const y = j * (squareSize + gridGap) * dpr;
+                const size = squareSize * dpr;
+                
+                ctx.fillStyle = `${baseColor}${squares[index]})`;
+                ctx.fillRect(x, y, size, size);
+            }
+        }
+    };
+
+    const animate = (time) => {
+        const deltaTime = (time - lastTime) / 1000;
+        lastTime = time;
+        
+        drawGrid(deltaTime);
+        animationFrameId = requestAnimationFrame(animate);
+    };
+
+    // Setup
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    // Start animation loop
+    animationFrameId = requestAnimationFrame(animate);
+}
+
+// Initialize the grid after DOM is loaded
+document.addEventListener('DOMContentLoaded', initFlickerGrid);
