@@ -1491,3 +1491,22 @@ function initFlickerGrid() {
 
 // Initialize the grid after DOM is loaded
 document.addEventListener('DOMContentLoaded', initFlickerGrid);
+
+// --- 14. Glow Card Pointer Synchronization ---
+function initGlowCards() {
+    const syncPointer = (e) => {
+        const x = e.clientX;
+        const y = e.clientY;
+        
+        // Update CSS variables globally so all [data-glow] cards inherit them
+        const root = document.documentElement;
+        root.style.setProperty('--x', x.toFixed(2));
+        root.style.setProperty('--xp', (x / window.innerWidth).toFixed(2));
+        root.style.setProperty('--y', y.toFixed(2));
+        root.style.setProperty('--yp', (y / window.innerHeight).toFixed(2));
+    };
+
+    document.addEventListener('pointermove', syncPointer);
+}
+
+document.addEventListener('DOMContentLoaded', initGlowCards);
