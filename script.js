@@ -268,12 +268,12 @@ function initThreeHero() {
     scene.add(directionalLight);
 
     // Accent light cyan
-    const pointLight = new THREE.PointLight(0x00f5ff, 3, 50); 
+    const pointLight = new THREE.PointLight(0x1275e2, 3, 50); 
     pointLight.position.set(-5, 5, 5);
     scene.add(pointLight);
 
     // Accent light purple
-    const pointLight2 = new THREE.PointLight(0x7b2fff, 3, 50); 
+    const pointLight2 = new THREE.PointLight(0x5f78a3, 3, 50); 
     pointLight2.position.set(5, -5, -5);
     scene.add(pointLight2);
 
@@ -303,7 +303,7 @@ function initThreeHero() {
     // Create Atmosphere Glow
     const atmosGeometry = new THREE.SphereGeometry(2.1, 32, 32);
     const atmosMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0x00f5ff,
+        color: 0x1275e2,
         transparent: true,
         opacity: 0.15,
         side: THREE.BackSide,
@@ -375,7 +375,7 @@ function initThreeSkills() {
     pointLight.position.set(5, 5, 5);
     scene.add(pointLight);
 
-    const pointLight2 = new THREE.PointLight(0x7b2fff, 1.0, 50); // Purple fill light
+    const pointLight2 = new THREE.PointLight(0x5f78a3, 1.0, 50); // Purple fill light
     pointLight2.position.set(-5, -5, -5);
     scene.add(pointLight2);
     
@@ -386,7 +386,7 @@ function initThreeSkills() {
     // 1. Inner Core
     const innerGeo = new THREE.IcosahedronGeometry(1.2, 0);
     const innerMat = new THREE.MeshStandardMaterial({ 
-        color: 0x7b2fff,
+        color: 0x5f78a3,
         roughness: 0.2,
         metalness: 0.8
     });
@@ -396,7 +396,7 @@ function initThreeSkills() {
     // 2. Outer Wireframe Core
     const outerGeo = new THREE.SphereGeometry(2, 32, 32);
     const outerMat = new THREE.MeshStandardMaterial({ 
-        color: 0x00f5ff, // Cyan wireframe
+        color: 0x1275e2, // Cyan wireframe
         wireframe: true,
         transparent: true,
         opacity: 0.3
@@ -415,7 +415,7 @@ function initThreeSkills() {
         new THREE.BoxGeometry(1, 1, 1)
     ];
     const nodeCount = 6;
-    const colors = [0x00f5ff, 0xffd700, 0xff00ea, 0x00f5ff, 0x7b2fff, 0xffffff];
+    const colors = [0x1275e2, 0xc55b00, 0x5f78a3, 0x1275e2, 0x5f78a3, 0xffffff];
     const nodeGroup = new THREE.Group();
     scene.add(nodeGroup);
     
@@ -452,13 +452,13 @@ function initThreeSkills() {
     scene.add(rings);
 
     const ringGeo1 = new THREE.TorusGeometry(6.5, 0.02, 16, 100);
-    const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x00f5ff, transparent: true, opacity: 0.4 });
+    const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x1275e2, transparent: true, opacity: 0.4 });
     const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
     ring1.rotation.x = Math.PI / 2;
     rings.add(ring1);
 
     const ringGeo2 = new THREE.TorusGeometry(5.5, 0.02, 16, 100);
-    const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x7b2fff, transparent: true, opacity: 0.4 });
+    const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x5f78a3, transparent: true, opacity: 0.4 });
     const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
     ring2.rotation.y = Math.PI / 3;
     ring2.rotation.x = Math.PI / 4;
@@ -656,11 +656,11 @@ function initThreeDesk() {
     dirLight.shadow.mapSize.height = 1024;
     scene.add(dirLight);
 
-    const purpleLight = new THREE.PointLight(0x7b2fff, 2, 20);
+    const purpleLight = new THREE.PointLight(0x5f78a3, 2, 20);
     purpleLight.position.set(-2, 2, 2);
     scene.add(purpleLight);
 
-    const cyanLight = new THREE.PointLight(0x00f5ff, 2, 20);
+    const cyanLight = new THREE.PointLight(0x1275e2, 2, 20);
     cyanLight.position.set(2, 2, -2);
     scene.add(cyanLight);
 
@@ -720,7 +720,7 @@ function initThreeDesk() {
         
         // Monitor Screen (Glowing)
         const screenGeo = new THREE.PlaneGeometry(1.4, 0.7);
-        const screenMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff, side: THREE.DoubleSide });
+        const screenMat = new THREE.MeshBasicMaterial({ color: 0x1275e2, side: THREE.DoubleSide });
         const screen = new THREE.Mesh(screenGeo, screenMat);
         screen.position.set(0, 0.6, -0.34);
         screen.rotation.x = -0.1;
@@ -1369,7 +1369,7 @@ function initOrbitalSkills() {
             <div class="orbit-card-title">${item.title}</div>
             <div class="orbit-card-content">${item.content}</div>
             <div class="orbit-energy-section">
-                <div class="orbit-energy-header"><span><i class="fas fa-bolt" style="color:#00f5ff; margin-right:4px;"></i> Energy Level</span><span>${item.energy}%</span></div>
+                <div class="orbit-energy-header"><span><i class="fas fa-bolt" style="color:#1275e2; margin-right:4px;"></i> Energy Level</span><span>${item.energy}%</span></div>
                 <div class="orbit-energy-bar-bg"><div class="orbit-energy-bar-fill" style="width: ${item.energy}%;"></div></div>
             </div>
             ${relatedHtml}
