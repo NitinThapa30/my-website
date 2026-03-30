@@ -93,17 +93,56 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const hamburger = document.querySelector('.hamburger');
-    const navLinks = document.querySelector('.nav-links');
-    if(hamburger) {
+    const overlay = document.querySelector('.mobile-nav-overlay');
+    
+    if(hamburger && overlay) {
         hamburger.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
+            const isOpen = overlay.classList.toggle('open');
+            hamburger.setAttribute('aria-expanded', isOpen);
+            document.body.style.overflow = isOpen ? 'hidden' : '';
+        });
+
+        overlay.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                overlay.classList.remove('open');
+                hamburger.setAttribute('aria-expanded', 'false');
+                document.body.style.overflow = '';
+            });
         });
     }
 
-    // Close mobile menu when clicking a link
-    document.querySelectorAll('.nav-links a').forEach(link => {
-        link.addEventListener('click', () => {
-            navLinks.classList.remove('active');
+    // Mobile specific JS fixes (Snap Scroll & Game Controls)
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile) {
+        document.documentElement.style.scrollSnapType = 'none';
+        document.querySelectorAll('section').forEach(s => {
+            s.style.scrollSnapAlign = 'none';
+            s.style.minHeight = 'auto';
+        });
+    }
+
+    // Wire touch controls to keyboard events (Dispatches inside iframe or window)
+    document.querySelectorAll('[data-key]').forEach(btn => {
+        const key = btn.dataset.key;
+        
+        const dispatchKeyEvent = (type) => {
+            const targetWindow = document.querySelector('iframe') ? document.querySelector('iframe').contentWindow : window;
+            if(targetWindow) {
+               targetWindow.dispatchEvent(new KeyboardEvent(type, { key: key }));
+            }
+        };
+
+        btn.addEventListener('pointerdown', e => {
+            e.preventDefault();
+            dispatchKeyEvent('keydown');
+        });
+        btn.addEventListener('pointerup', e => {
+            e.preventDefault();
+            dispatchKeyEvent('keyup');
+        });
+        // Handle touch cancel/leave similarly
+        btn.addEventListener('pointerleave', e => {
+            if (e.buttons > 0) dispatchKeyEvent('keyup');
         });
     });
 
@@ -635,7 +674,8 @@ function initThreeDesk() {
     
     // Setup camera
     const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(4, 3, 5); // Angle looking down at the desk
+    const isMobile3D = window.innerWidth <= 768;
+    camera.position.set(isMobile3D ? 3 : 4, isMobile3D ? 2.5 : 3, isMobile3D ? 4 : 5); // Angle looking down at the desk
 
     // Setup renderer
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });

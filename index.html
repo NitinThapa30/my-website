@@ -48,13 +48,23 @@
                 <a href="#education">Timeline</a>
                 <a href="#contact">Contact</a>
             </div>
-            <div class="hamburger">
+            <button class="hamburger" aria-label="Open menu" aria-expanded="false">
                 <span></span>
                 <span></span>
                 <span></span>
-            </div>
+            </button>
         </div>
     </nav>
+
+    <div class="mobile-nav-overlay">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#skills">Skills</a>
+        <a href="#projects">Projects</a>
+        <a href="#internships">Internships</a>
+        <a href="#education">Timeline</a>
+        <a href="#contact">Contact</a>
+    </div>
 
     <div class="content-wrapper">
         <!-- Hero Section Wrapper -->
@@ -129,7 +139,7 @@
             <div class="about-3d-container reveal-up" style="transition-delay: 0.2s">
                 <div class="desk-hardware-title">Sys.Hardware_Setup()</div>
                 <div id="about-3d-desk"></div>
-                <div class="desk-hints">DRAG TO ROTATE | SCROLL TO ZOOM</div>
+                <div class="desk-hints">DRAG/TOUCH TO ROTATE | SCROLL/PINCH TO ZOOM</div>
             </div>
         </section>
 
@@ -391,6 +401,17 @@
                 <div id="game-container">
                     <iframe src="webgame.html" title="3D Web Game"></iframe>
                 </div>
+                
+                <div class="touch-controls" id="touchControls">
+                    <div class="dpad">
+                        <button class="dpad-btn up" data-key="ArrowUp">▲</button>
+                        <button class="dpad-btn left" data-key="ArrowLeft">◀</button>
+                        <button class="dpad-btn down" data-key="ArrowDown">▼</button>
+                        <button class="dpad-btn right" data-key="ArrowRight">▶</button>
+                    </div>
+                    <button class="jump-btn" data-key=" ">JUMP</button>
+                </div>
+
                 <div class="game-hud-bottom">
                     <span class="hud-text">USE W/A/S/D or ARROWS TO MOVE | SPACE TO JUMP</span>
                 </div>
