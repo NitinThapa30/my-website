@@ -2078,6 +2078,22 @@ a:hover ~ .cursor-outline, button:hover ~ .cursor-outline, .project-card-3d:hove
     margin: 0 auto;
     display: block;
   }
+  
+  /* Hero Text Override */
+  .glitch {
+    font-size: 11vw !important;
+  }
+  
+  /* Prevent Globe / 3D Model overflowing horizontal mobile */
+  .profile-container {
+    width: 250px;
+    height: 250px;
+  }
+  #three-hero-container {
+    width: 110%;
+    height: 110%;
+  }
+
   .about-image-wrapper {
     display: flex;
     justify-content: center;
