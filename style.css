@@ -2277,3 +2277,7 @@ a:hover ~ .cursor-outline, button:hover ~ .cursor-outline, .project-card-3d:hove
   gap: 1.5rem;
 }
 
+/* GPU Acceleration for GSAP Animations */
+.glitch, .subtitle-container, .hero-stats, .cyber-button, #three-hero-container, .section, .reveal-up, .reveal-side {
+    will-change: transform, opacity;
+}

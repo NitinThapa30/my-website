@@ -168,6 +168,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
         gsap.registerPlugin(ScrollTrigger);
 
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Hero Timeline Sequence
+        const tl = gsap.timeline({ defaults: { ease: "power2.out", duration: 0.6 } });
+        tl.from(".glitch", { opacity: 0, y: -40 })
+          .from(".subtitle-container", { opacity: 0, x: -30 }, "-=0.3")
+          .from(".hero-stats", { opacity: 0, scale: 0.8 }, "-=0.2")
+          .from(".cyber-button", { opacity: 0, scale: 0.8 }, "-=0.2")
+          .from("#three-hero-container", { opacity: 0, scale: 0.8 }, "-=0.2");
+
+        // Snap Scroll Section Reveal
+        gsap.utils.toArray(".section").forEach(section => {
+            gsap.from(section, {
+                opacity: 0, y: 50,
+                scrollTrigger: { trigger: section, start: "top 75%", toggleActions: "play none none reverse" }
+            });
+        });
+
         // Fade in up
         gsap.utils.toArray('.reveal-up').forEach(element => {
             gsap.from(element, {
@@ -365,8 +383,6 @@ function initThreeHero() {
 
     // Animation Loop
     function animate() {
-        requestAnimationFrame(animate);
-
         // Regular continuous rotation if OrbitControls didn't load
         if(!controls) {
             earthGroup.rotation.y += 0.003;
@@ -377,7 +393,7 @@ function initThreeHero() {
 
         renderer.render(scene, camera);
     }
-    animate();
+    gsap.ticker.add(animate);
 
     // Handle Resize
     window.addEventListener('resize', () => {
@@ -527,8 +543,6 @@ function initThreeSkills() {
 
     // Animation Loop
     function animate() {
-        requestAnimationFrame(animate);
-
         // Core rotation
         innerCore.rotation.y += 0.01;
         innerCore.rotation.x += 0.008;
@@ -552,7 +566,7 @@ function initThreeSkills() {
         renderer.render(scene, camera);
     }
     
-    animate();
+    gsap.ticker.add(animate);
 
     // Mouse Interaction for skills canvas (parallax tilt)
     let targetX = 0;
@@ -788,15 +802,13 @@ function initThreeDesk() {
 
     // Animation Loop
     function animateDesk() {
-        requestAnimationFrame(animateDesk);
-
         if (deskControls) {
             deskControls.update(); 
         }
 
         renderer.render(scene, camera);
     }
-    animateDesk();
+    gsap.ticker.add(animateDesk);
 
     // Handle Resize
     window.addEventListener('resize', () => {
