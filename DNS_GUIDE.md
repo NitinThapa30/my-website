@@ -32,10 +32,15 @@ Add these 4 records:
 
 ---
 
-## Verification
+## Verification & Enabling HTTPS
 
 Once configured:
-1. Wait 2 to 5 minutes for DNS propagation.
-2. Go to **GitHub Repository → Settings → Pages**.
-3. Under **Custom domain**, verify `nitinthapaportfoilo.dpdns.org` is entered and click **Check again**.
-4. Check **Enforce HTTPS** once the DNS check passes.
+1. In DigitalPlat, add a `CNAME` record for `www`:
+   - **Type:** `CNAME`
+   - **Name:** `www`
+   - **Value:** `nitinthapa30.github.io.`
+   - **TTL:** `300`
+2. Wait 2 to 5 minutes for DNS propagation.
+3. In **GitHub Repository → Settings → Pages**, click **Check again**.
+4. Once the SSL certificate finishes generating (typically 5–15 minutes), check the **Enforce HTTPS** box to secure your site with HTTPS.
+
