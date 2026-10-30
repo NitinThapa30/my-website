@@ -2506,6 +2506,9 @@ a:hover ~ .cursor-outline, button:hover ~ .cursor-outline, .project-card-3d:hove
     gap: 0.7rem;
     padding: 2rem 1.8rem;
     text-align: left;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--text-primary);
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
