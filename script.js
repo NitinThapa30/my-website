@@ -5,7 +5,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const bootScreen = document.getElementById('boot-screen');
     const bootText = document.getElementById('boot-text');
     
-    if (bootScreen && bootText && !sessionStorage.getItem('booted')) {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Shared helper to dismiss the boot screen (skip button + completion)
+        const hideBootScreen = () => {
+            if (!bootScreen) return;
+            bootScreen.classList.add('hidden');
+            document.body.style.overflow = '';
+            sessionStorage.setItem('booted', 'true');
+        };
+
+        if (bootScreen && bootText && !sessionStorage.getItem('booted') && !prefersReducedMotion) {
         // Only run boot sequence once per session
         document.body.style.overflow = 'hidden';
         
@@ -31,16 +41,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(typeBootLine, 100 + Math.random() * 200); // Random delay
             } else {
                 // Formatting complete, hide screen
-                setTimeout(() => {
-                    bootScreen.classList.add('hidden');
-                    document.body.style.overflow = '';
-                    sessionStorage.setItem('booted', 'true');
-                }, 800);
+                setTimeout(hideBootScreen, 800);
             }
         }
         
         // Start typing after a short initial pause
         setTimeout(typeBootLine, 500);
+
+        // Allow the visitor to skip the boot sequence (Phase 3)
+        const bootSkipBtn = document.getElementById('boot-skip');
+        if (bootSkipBtn) bootSkipBtn.addEventListener('click', hideBootScreen);
     } else if (bootScreen) {
         // If already booted this session, hide immediately
         bootScreen.style.display = 'none';
@@ -1021,7 +1031,8 @@ function initD3Earth() {
     const rotationSpeed = 0.5;
 
     const rotate = () => {
-      if (autoRotate) {
+      // Pause auto-rotation when the hero is offscreen or the tab is hidden (Phase 8)
+      if (autoRotate && !window.__heroPaused && !window.__tabHidden) {
         rotation[0] += rotationSpeed;
         projection.rotate(rotation);
         render();
@@ -1562,3 +1573,269 @@ function initGlowCards() {
 }
 
 document.addEventListener('DOMContentLoaded', initGlowCards);
+
+
+// ============================================================
+// --- 15. Portfolio Upgrade Module
+// Workspace panels (Phase 4), project gallery filters (Phase 5),
+// case-study modal (Phase 6), animation power saving (Phase 8).
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- 15.1 Hero animation power saving ---
+    const heroWrapper = document.getElementById('hero-wrapper');
+    if (heroWrapper && 'IntersectionObserver' in window) {
+        const heroObserver = new IntersectionObserver((entries) => {
+            window.__heroPaused = !entries[0].isIntersecting;
+        }, { threshold: 0.05 });
+        heroObserver.observe(heroWrapper);
+    }
+    document.addEventListener('visibilitychange', () => {
+        window.__tabHidden = document.hidden;
+    });
+
+    // --- 15.2 Project gallery filters ---
+    const filterChips = document.querySelectorAll('.filter-chip');
+    const projectCards = document.querySelectorAll('#projects-grid .project-card-3d');
+    filterChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            filterChips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            const filter = chip.dataset.filter;
+            projectCards.forEach(card => {
+                const show = filter === 'all' || card.dataset.category === filter;
+                card.style.display = show ? '' : 'none';
+            });
+        });
+    });
+
+    // --- 15.3 Shared modal plumbing (case studies + workspace panels) ---
+    const caseModal = document.getElementById('case-modal');
+    const caseTitle = document.getElementById('case-modal-title');
+    const caseBody = document.getElementById('case-modal-body');
+    const caseClose = document.getElementById('close-case');
+
+    const openPanel = (title, html) => {
+        if (!caseModal || !caseBody) return;
+        if (caseTitle) caseTitle.textContent = title;
+        caseBody.innerHTML = html;
+        caseModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        if (caseClose) caseClose.focus();
+    };
+    const closePanel = () => {
+        if (!caseModal) return;
+        caseModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    };
+    if (caseClose) caseClose.addEventListener('click', closePanel);
+    if (caseModal) {
+        caseModal.addEventListener('click', (e) => {
+            if (e.target === caseModal) closePanel();
+        });
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && caseModal.classList.contains('active')) closePanel();
+        });
+    }
+
+    const chapter = (h, body) => `<div class="case-chapter"><h4>${h}</h4>${body}</div>`;
+    const bullets = (arr) => `<ul>${arr.map(i => `<li>${i}</li>`).join('')}</ul>`;
+    const techChips = (arr) => `<div class="case-tech">${arr.map(t => `<span>${t}</span>`).join('')}</div>`;
+    const caseLinks = (arr) => `<div class="case-links">${arr.join('')}</div>`;
+    const headline = (subtitle, status) => `<div class="case-headline"><p class="proj-subtitle">${subtitle}</p><span class="project-status ${status === 'Live' ? 'project-status--live' : ''}"><i class="fas ${status === 'Live' ? 'fa-circle' : 'fa-check-circle'}"></i> ${status}</span></div>`;
+
+    // --- 15.4 Interactive Developer Workspace data (verified content) ---
+    const WORKSPACE_DATA = {
+        ai: {
+            title: 'Sys.Panel[AI_Engineering]',
+            html:
+                headline('LLMs, multimodal assistants & offline inference', 'Active') +
+                chapter('Focus', bullets([
+                    'Running quantized LLMs (Mistral-7B) fully offline with llama-cpp-python.',
+                    'Multimodal pipelines: text, speech-to-text, OCR and image understanding.',
+                    'Local image generation with Stable Diffusion — zero cloud dependency.'
+                ])) +
+                chapter('Featured Build', bullets([
+                    '<b>Bhaskara-AI</b> — an offline PySide6 AI assistant with text & voice chat, TTS, OCR, object detection, Stable Diffusion image generation, news & weather integration and multi-chat history.'
+                ])) +
+                chapter('Stack', techChips(['Python', 'llama-cpp-python', 'Mistral-7B', 'Stable Diffusion', 'PySide6', 'Tesseract'])) +
+                caseLinks(['<a class="repo-link" href="https://github.com/NitinThapa30/Bhaskara-AI" target="_blank" rel="noopener"><i class="fab fa-github"></i> View Repository</a>', '<button type="button" class="case-btn" data-case="bhaskara">Open Case Study</button>'])
+        },
+        game: {
+            title: 'Sys.Panel[Game_Development]',
+            html:
+                headline('Three.js worlds, gameplay systems & Unreal Engine', 'Active') +
+                chapter('What I Build', bullets([
+                    'Browser-based 3D games with Three.js — the Gem Hunter below is fully playable right now.',
+                    'Gameplay systems: level design, collision, scoring, timers and leaderboards.',
+                    'Game feel: particle effects, sound design, skins and juice.'
+                ])) +
+                chapter('Background', bullets([
+                    'Started in game design, 3D modelling and game testing at GRD Institute (Diploma in CSE).',
+                    'Created procedural materials and textures for indie game projects.'
+                ])) +
+                caseLinks(['<a class="repo-link" href="webgame.html" target="_blank" rel="noopener"><i class="fas fa-play"></i> Play 3D Gem Hunter</a>', '<button type="button" class="case-btn" data-case="gemhunter">Open Case Study</button>'])
+        },
+        software: {
+            title: 'Sys.Panel[Software_Development]',
+            html:
+                headline('C++ / Python desktop apps & OOP engineering', 'Completed') +
+                chapter('Engineering Practice', bullets([
+                    'C++ with a strong OOP foundation — applied during my CodSoft internship.',
+                    'Cross-platform desktop GUIs with PySide6 / Qt, including hybrid HTML/CSS interfaces.',
+                    'Real-world utilities: translators, assistants and automation tools.'
+                ])) +
+                chapter('Selected Work', bullets([
+                    '<b>Multimodal Language Translator</b> — C++/Python/Qt app translating text, speech and images.',
+                    '<b>CodSoft tasks</b> — hands-on C++ programming submissions from my internship.'
+                ])) +
+                caseLinks(['<a class="repo-link" href="https://github.com/NitinThapa30/CODSOFT-Nitin" target="_blank" rel="noopener"><i class="fab fa-github"></i> CodSoft Tasks</a>', '<button type="button" class="case-btn" data-case="translator">Open Case Study</button>'])
+        },
+        design3d: {
+            title: 'Sys.Panel[3D_Design]',
+            html:
+                headline('WebGL scenes, Blender pipelines & procedural art', 'Active') +
+                chapter('Live In This Portfolio', bullets([
+                    'Interactive 3D hardware desk scene with orbit controls.',
+                    'Custom halftone D3 globe rendered on the hero section.',
+                    'Cybernetic shader grid background and flicker-grid footer.'
+                ])) +
+                chapter('Tooling', bullets([
+                    'Blender for modelling and procedural materials.',
+                    'Exploring AI-assisted 3D workflows with an MCP server for Blender.'
+                ])) +
+                caseLinks(['<a class="repo-link" href="https://github.com/NitinThapa30/antigravity-blender-mcp" target="_blank" rel="noopener"><i class="fab fa-github"></i> Blender MCP</a>', '<a class="repo-link" href="https://www.behance.net/evilomega/moodboards" target="_blank" rel="noopener"><i class="fab fa-behance"></i> Behance</a>'])
+        },
+        live: {
+            title: 'Sys.Panel[Live_Projects]',
+            html:
+                headline('Deployed builds you can run right now', 'Live') +
+                chapter('Running Now', bullets([
+                    '<b>This portfolio</b> — static HTML/CSS/JS with Three.js, GSAP, D3 and a custom terminal.',
+                    '<b>3D Gem Hunter</b> — playable Three.js game embedded in the Game section below.'
+                ])) +
+                chapter('Try Them', bullets([
+                    'Scroll to the game section, or open the game fullscreen.',
+                    'Open the terminal in the section above and type <b>help</b>.'
+                ])) +
+                caseLinks(['<a class="repo-link" href="webgame.html" target="_blank" rel="noopener"><i class="fas fa-play"></i> Play Game</a>', '<a class="repo-link" href="https://github.com/NitinThapa30/my-website" target="_blank" rel="noopener"><i class="fab fa-github"></i> This Website</a>'])
+        },
+        tools: {
+            title: 'Sys.Panel[Development_Tools]',
+            html:
+                headline('My daily stack, from Git to Docker to Adobe CC', 'Verified') +
+                chapter('Daily Drivers', bullets([
+                    'Git & GitHub for version control and Pages deployments.',
+                    'VS Code as the primary editor across Python, C++ and web projects.',
+                    'Docker — used for containerised services on a Raspberry Pi mini-server.'
+                ])) +
+                chapter('Creative & Cloud', bullets([
+                    'Adobe Photoshop & Illustrator from my graphic design internship.',
+                    'Google Cloud AI certifications: Generative AI, LLMs, Vertex AI, Responsible AI.'
+                ])) +
+                caseLinks(['<a class="repo-link" href="https://github.com/NitinThapa30/raspberry-pi-mini-server" target="_blank" rel="noopener"><i class="fab fa-github"></i> Pi Mini Server</a>'])
+        }
+    };
+
+    // Workspace tile interactions + pointer glow
+    document.querySelectorAll('.workspace-tile').forEach(tile => {
+        tile.addEventListener('pointermove', (e) => {
+            const rect = tile.getBoundingClientRect();
+            tile.style.setProperty('--ws-mx', ((e.clientX - rect.left) / rect.width * 100) + '%');
+            tile.style.setProperty('--ws-my', ((e.clientY - rect.top) / rect.height * 100) + '%');
+        });
+        tile.addEventListener('click', () => {
+            const data = WORKSPACE_DATA[tile.dataset.workspace];
+            if (data) openPanel(data.title, data.html);
+        });
+    });
+
+    // Delegated handler so buttons inside injected panels work too
+    document.addEventListener('click', (e) => {
+        const trigger = e.target.closest('[data-case]');
+        if (!trigger) return;
+        const data = CASE_DATA[trigger.dataset.case];
+        if (data) openPanel(data.title, data.html);
+    });
+
+    // --- 15.5 Project case studies (Trek Cards-inspired chapters) ---
+    const CASE_DATA = {
+        bhaskara: {
+            title: 'CaseStudy[Bhaskara-AI]',
+            html:
+                headline('Offline Multimodal AI Assistant', 'Completed') +
+                chapter('Objective', '<p>Build a fully offline AI assistant that combines conversation, voice and vision without depending on any cloud service.</p>') +
+                chapter('Problem', '<p>Mainstream AI assistants require constant connectivity and send user data to third parties. The goal was privacy-first, offline multimodal AI on consumer hardware.</p>') +
+                chapter('Architecture', bullets([
+                    'Mistral-7B served locally through llama-cpp-python for natural language.',
+                    'Stable Diffusion for on-device image generation.',
+                    'Speech recognition for voice input, pyttsx3 for text-to-speech output.',
+                    'OCR (Tesseract) and object detection for image understanding.',
+                    'PySide6 desktop shell with a hybrid HTML/CSS interface.'
+                ])) +
+                chapter('Process', bullets([
+                    'Prototyped LLM inference and benchmarked quantized models for local hardware.',
+                    'Integrated each modality (text, voice, image) as an independent pipeline.',
+                    'Designed a multi-chat history system with news & weather integrations.'
+                ])) +
+                chapter('Challenges', bullets([
+                    'Fitting a 7B-parameter model into consumer-grade memory budgets.',
+                    'Keeping latency acceptable for real-time voice interaction.',
+                    'Unifying GUI, LLM and diffusion pipelines into one stable desktop app.'
+                ])) +
+                chapter('Outcome', '<p>A working offline assistant with text-to-text, voice-to-voice and OCR modes — no external cloud dependency at any point.</p>') +
+                chapter('Technologies', techChips(['Python', 'Mistral-7B', 'llama-cpp-python', 'Stable Diffusion', 'PySide6', 'Tesseract', 'pyttsx3'])) +
+                caseLinks(['<a class="repo-link" href="https://github.com/NitinThapa30/Bhaskara-AI" target="_blank" rel="noopener"><i class="fab fa-github"></i> View Source</a>'])
+        },
+        translator: {
+            title: 'CaseStudy[Multimodal-Translator]',
+            html:
+                headline('Desktop Translation Tool', 'Completed') +
+                chapter('Objective', '<p>Provide seamless translation across three input modes — text, speech and images — inside one intuitive desktop application.</p>') +
+                chapter('Problem', '<p>Translation tools typically handle only typed text. Speech and printed/photographed text require separate apps and manual copy-paste workflows.</p>') +
+                chapter('Architecture', bullets([
+                    'Tesseract OCR for image-to-text extraction.',
+                    'Speech Recognition for live voice input.',
+                    'pyttsx3 for spoken output of translations (TTS).',
+                    'Qt/PySide6 GUI, with C++ and Python powering the workflow.'
+                ])) +
+                chapter('Process', bullets([
+                    'Built each input pipeline independently, then unified them behind one interface.',
+                    'Designed a real-time translation flow with support for multiple languages.',
+                    'Iterated on the GUI for a simple three-mode user experience.'
+                ])) +
+                chapter('Challenges', bullets([
+                    'Normalising output from OCR and speech engines into one translation path.',
+                    'Keeping the real-time workflow responsive across input modes.'
+                ])) +
+                chapter('Outcome', '<p>A working desktop translator that accepts text, speech and images and returns translated results in real time.</p>') +
+                chapter('Technologies', techChips(['Python', 'C++', 'Qt', 'PySide6', 'Tesseract OCR', 'SpeechRecognition', 'pyttsx3'])) +
+                caseLinks(['<a class="repo-link" href="https://github.com/NitinThapa30/Multimodel-Language-Translator-with-GUI" target="_blank" rel="noopener"><i class="fab fa-github"></i> View Source</a>'])
+        },
+        gemhunter: {
+            title: 'CaseStudy[3D-Gem-Hunter]',
+            html:
+                headline('Playable Three.js Web Game', 'Live') +
+                chapter('Objective', '<p>Ship a complete, playable 3D browser game embedded directly in the portfolio — proving game development skill, not just describing it.</p>') +
+                chapter('Problem', '<p>Most portfolios only list game projects. This one lets recruiters and visitors actually play one in the browser, on desktop or mobile.</p>') +
+                chapter('Architecture', bullets([
+                    'Three.js scene with player movement, camera follow and obstacle collision.',
+                    'Progressive levels with increasing gem counts and obstacle density.',
+                    'Score and timer systems feeding a local leaderboard.',
+                    'Web Audio sound effects plus background music.'
+                ])) +
+                chapter('Process', bullets([
+                    'Built the core loop first: move, collect, avoid, complete.',
+                    'Layered in levels, UI states, particles and confetti feedback.',
+                    'Added keyboard controls plus on-screen touch D-pad for mobile.'
+                ])) +
+                chapter('Challenges', bullets([
+                    'Tuning collision and spawn distances so levels stay fair but challenging.',
+                    'Making controls work equally well with keyboard and touch.'
+                ])) +
+                chapter('Outcome', '<p>A polished multi-level 3D web game running at 60fps in the browser — playable below in the Game section.</p>') +
+                chapter('Technologies', techChips(['Three.js', 'JavaScript', 'HTML5', 'Web Audio', 'CSS3'])) +
+                caseLinks(['<a class="repo-link" href="webgame.html" target="_blank" rel="noopener"><i class="fas fa-play"></i> Play Fullscreen</a>'])
+        }
+    };
+});
