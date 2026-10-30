@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
             bootScreen.classList.add('hidden');
             document.body.style.overflow = '';
             sessionStorage.setItem('booted', 'true');
+            window.__bootDone = true;
+            window.dispatchEvent(new CustomEvent('boot:done'));
         };
 
         if (bootScreen && bootText && !sessionStorage.getItem('booted') && !prefersReducedMotion) {
@@ -54,17 +56,23 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (bootScreen) {
         // If already booted this session, hide immediately
         bootScreen.style.display = 'none';
+        window.__bootDone = true;
+        window.dispatchEvent(new CustomEvent('boot:done'));
     }
 
-    // --- 0.2 Reading Progress Bar ---
+    // --- 0.2 Reading Progress Bar (rAF-throttled) ---
     const scrollProgress = document.getElementById('scroll-progress');
+    let progressTicking = false;
     window.addEventListener('scroll', () => {
-        if(!scrollProgress) return;
-        const totalScroll = document.documentElement.scrollTop;
-        const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-        const scroll = `${totalScroll / windowHeight * 100}%`;
-        scrollProgress.style.width = scroll;
-    });
+        if (progressTicking || !scrollProgress) return;
+        progressTicking = true;
+        requestAnimationFrame(() => {
+            const totalScroll = document.documentElement.scrollTop;
+            const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            scrollProgress.style.width = `${(totalScroll / windowHeight) * 100}%`;
+            progressTicking = false;
+        });
+    }, { passive: true });
 
     // --- 1. Custom Cursor ---
     const cursorDot = document.getElementById('cursor-dot');
@@ -92,15 +100,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 2. Navbar Scroll Effect & Mobile Menu ---
+    // --- 2. Navbar Scroll Effect (rAF-throttled) & Mobile Menu ---
     const navbar = document.getElementById('navbar');
+    let navTicking = false;
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-    });
+        if (navTicking || !navbar) return;
+        navTicking = true;
+        requestAnimationFrame(() => {
+            navbar.classList.toggle('scrolled', window.scrollY > 50);
+            navTicking = false;
+        });
+    }, { passive: true });
 
     const hamburger = document.querySelector('.hamburger');
     const overlay = document.querySelector('.mobile-nav-overlay');
@@ -178,15 +188,49 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
         gsap.registerPlugin(ScrollTrigger);
 
-        gsap.registerPlugin(ScrollTrigger);
+        // Lenis smooth scrolling (pradiplabs/vploss-style buttery scroll).
+        // Enabled only on fine-pointer, motion-safe devices; native scrolling untouched elsewhere.
+        if (typeof Lenis !== 'undefined' && !prefersReducedMotion && !isTouchDevice) {
+            const lenis = new Lenis({
+                duration: 1.15,
+                smoothWheel: true,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+            });
+            lenis.on('scroll', ScrollTrigger.update);
+            gsap.ticker.add((time) => lenis.raf(time * 1000));
+            gsap.ticker.lagSmoothing(0);
+            window.__lenis = lenis;
 
-        // Hero Timeline Sequence
-        const tl = gsap.timeline({ defaults: { ease: "power2.out", duration: 0.6 } });
-        tl.from(".glitch", { opacity: 0, y: -40 })
-          .from(".subtitle-container", { opacity: 0, x: -30 }, "-=0.3")
-          .from(".hero-stats", { opacity: 0, scale: 0.8 }, "-=0.2")
-          .from(".cyber-button", { opacity: 0, scale: 0.8 }, "-=0.2")
-          .from("#three-hero-container", { opacity: 0, scale: 0.8 }, "-=0.2");
+            // Smooth in-page anchor navigation with navbar offset
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', (e) => {
+                    const hash = anchor.getAttribute('href');
+                    if (!hash || hash.length <= 1) return;
+                    const target = document.querySelector(hash);
+                    if (!target) return;
+                    e.preventDefault();
+                    lenis.scrollTo(target, { offset: -70, duration: 1.2 });
+                });
+            });
+        }
+        // Cinematic hero entrance — plays once the boot screen completes (vploss-style).
+        // Skipped entirely for users who prefer reduced motion.
+        const playHeroIntro = () => {
+            if (window.__heroIntroPlayed || prefersReducedMotion) return;
+            window.__heroIntroPlayed = true;
+            gsap.timeline({ defaults: { ease: "power3.out", duration: 1 } })
+                .from('.hero-text .glitch', { y: -50, autoAlpha: 0 })
+                .from('.subtitle-container', { x: -40, autoAlpha: 0 }, "-=0.6")
+                .from('.hero-roles .role-chip', { y: 20, autoAlpha: 0, stagger: 0.1 }, "-=0.5")
+                .from('.hero-stats .stat-item', { y: 20, autoAlpha: 0, stagger: 0.08 }, "-=0.4")
+                .from('.hero-text .cyber-button', { y: 20, autoAlpha: 0 }, "-=0.5")
+                .from('.profile-container', { scale: 0.85, autoAlpha: 0 }, "-=0.8")
+                .set('.hero-text .glitch, .subtitle-container, .hero-roles .role-chip, .hero-stats .stat-item, .hero-text .cyber-button, .profile-container',
+                    { clearProps: 'transform,opacity,visibility' });
+        };
+        window.addEventListener('boot:done', playHeroIntro, { once: true });
+        if (window.__bootDone) setTimeout(playHeroIntro, 400); // Boot already finished before this listener existed
+        setTimeout(playHeroIntro, 6000); // Safety net if the boot event never fires
 
         // Snap Scroll Section Reveal
         gsap.utils.toArray(".section").forEach(section => {
@@ -810,13 +854,23 @@ function initThreeDesk() {
         deskGroup.position.y = -0.5;
     }
 
+    // Pause rendering when the desk is offscreen or the tab is hidden (performance)
+    let deskVisible = true;
+    if ('IntersectionObserver' in window) {
+        new IntersectionObserver((entries) => {
+            deskVisible = entries[0].isIntersecting;
+        }, { threshold: 0.05 }).observe(container);
+    }
+
     // Animation Loop
     function animateDesk() {
         if (deskControls) {
             deskControls.update(); 
         }
 
-        renderer.render(scene, camera);
+        if (deskVisible && !window.__tabHidden) {
+            renderer.render(scene, camera);
+        }
     }
     gsap.ticker.add(animateDesk);
 
@@ -1111,7 +1165,7 @@ function initCyberneticGridShader() {
 
     // 1) Renderer, Scene, Camera, Clock
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // cap DPR: big perf win on hi-dpi screens
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
 
@@ -1230,8 +1284,9 @@ function initCyberneticGridShader() {
     };
     window.addEventListener('mousemove', onMouseMove);
 
-    // 6) Animation loop
+    // 6) Animation loop — skips rendering while the hero is offscreen or the tab is hidden
     renderer.setAnimationLoop(() => {
+        if (window.__heroPaused || window.__tabHidden) return;
         uniforms.iTime.value = clock.getElapsedTime();
         renderer.render(scene, camera);
     });
@@ -1573,6 +1628,21 @@ function initGlowCards() {
 }
 
 document.addEventListener('DOMContentLoaded', initGlowCards);
+
+// --- 14.5 Interactive 3D Tilt Cards (VanillaTilt was previously loaded but never initialized) ---
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof VanillaTilt === 'undefined') return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (window.matchMedia('(hover: none)').matches) return; // skip touch devices
+    VanillaTilt.init(document.querySelectorAll('[data-tilt]'), {
+        max: 10,
+        speed: 400,
+        glare: true,
+        'max-glare': 0.2,
+        scale: 1.02,
+        gyroscope: false
+    });
+});
 
 
 // ============================================================
